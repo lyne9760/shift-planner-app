@@ -14,5 +14,41 @@ Thumbs.db
 *.xlsx
 *.xls
 
-# Optional local exports/logs
+# Generated exports / local project snapshots
 *.log
+schedule_final_v2.json
+schedule_plan_*.json
+monthly_schedule_input_template.json
+
+# Internal reports and requirement notes
+ADJUSTMENT_REPORT.md
+COMPLETION_REPORT.md
+DELIVERY_CHECKLIST.md
+DELIVERY_SUMMARY_V2.md
+development_report.md
+FILE_LIST.md
+FINAL_SUMMARY.md
+ISSUES_AND_IMPROVEMENTS.md
+QUICK_START_V2.md
+README_V2.md
+REDESIGN_REPORT_V2.md
+排班APP规则说明.md
+排班需求文档.md
+排班需求工具.html
+INDEX_V2.html
+project_index.html
+scheduler_v2.html
+scheduler.html
+generate_balanced_schedule.py
+generate_november_first_duty.py
+generate_schedule_v2.py
+quick_start.py
+run_schedule_generation.py
+schedule_export.py
+schedule_new_plan.py
+format_november_like_source.py
+generate_backup_november_2025.py
+generate_backup_trial.py
+merge_november_schedules.py
+scheduling_rules.json
+test_python.py

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ICU 排班助手</title>
+<title>排班助手</title>
 <script src="xlsx.full.min.js"></script>
 <style>
   :root {
@@ -195,7 +195,7 @@
 <div class="app-shell">
   <aside class="sidebar">
     <div class="brand">
-      <div class="brand-mark">ICU</div>
+      <div class="brand-mark">S</div>
       <h1>排班助手</h1>
       <p>月度值班编排工作台</p>
     </div>
@@ -212,7 +212,7 @@
   <main>
     <header class="topbar">
       <div>
-        <div class="eyebrow">ICU Duty Planner</div>
+        <div class="eyebrow">Shift Planner</div>
         <h2 id="page-title">周期与衔接</h2>
         <p id="page-subtitle">先确定这一轮排班从哪天开始、在哪里结束。</p>
       </div>
@@ -230,25 +230,25 @@
       <div class="card" id="excel-import-card" style="margin-bottom:16px">
         <div class="card-head">
           <div>
-            <h3>从院内表格开始</h3>
-            <p class="card-desc">可同时上传当月/上月轮转安排和二三值班表，系统会按表头自动识别。</p>
+            <h3>从现有表格开始</h3>
+            <p class="card-desc">可同时上传当月和上月的排班资料，系统会按表头自动识别。</p>
           </div>
           <button class="btn primary" onclick="document.getElementById('excel-files').click()">选择 Excel</button>
         </div>
         <div id="excel-import-result" class="quiet-rule">
-          尚未导入。支持识别“分科安排”“具体名单”和“二值”区域；三值、行政会自动忽略。
+          尚未导入。支持识别人员名单、历史班表和覆盖安排等常见区域。
         </div>
       </div>
       <div class="metric-row">
         <div class="metric"><b id="metric-days">0</b><span>本轮排班天数</span></div>
-        <div class="metric"><b id="metric-old">0</b><span>上月 ICU 老人员</span></div>
+        <div class="metric"><b id="metric-old">0</b><span>上月延续人员</span></div>
         <div class="metric"><b id="metric-holiday">0</b><span>标记假期</span></div>
         <div class="metric"><b id="metric-recent">0</b><span>上月月底记录</span></div>
       </div>
       <div class="grid two">
         <div class="card">
           <div class="card-head">
-            <div><h3>本月周期</h3><p class="card-desc">工作日与假期以院内日历为准。</p></div>
+            <div><h3>本月周期</h3><p class="card-desc">工作日与假期以本团队安排为准。</p></div>
           </div>
           <div class="form-grid">
             <div class="field">
@@ -282,7 +282,7 @@
           </div>
           <div class="form-grid">
             <div class="field full">
-              <label>上月 ICU 人员</label>
+              <label>上月延续人员</label>
               <textarea id="old-icu" placeholder="姓名用换行、逗号或顿号分隔"></textarea>
             </div>
             <div class="field full">
@@ -294,7 +294,7 @@
             </div>
           </div>
           <div class="quiet-rule" style="margin-top:14px">
-            开头两天会留一位熟悉 ICU 的人；刚在月底值过班的人，也会自动避开过近日期。
+            开头两天会尽量保留一位熟悉流程的人；月底刚值过班的人也会自动避开过近日期。
           </div>
         </div>
       </div>
@@ -1221,7 +1221,7 @@ function renderMetrics() {
 function renderAll(){renderMetrics();renderPeople();renderPairs();renderBackup();renderSchedule();}
 
 function exportProject() {
-  download(JSON.stringify(data,null,2),`ICU排班项目_${data.cycle.month||"未命名"}.json`,"application/json");
+  download(JSON.stringify(data,null,2),`排班项目_${data.cycle.month||"未命名"}.json`,"application/json");
 }
 function importProject(event) {
   const file=event.target.files[0]; if(!file)return;
@@ -1233,7 +1233,7 @@ function exportExcel() {
   if(!data.schedule.length)return toast("请先生成排班");
   const rows=data.schedule.map(r=>`<tr><td>${r.date}</td><td>${r.main}</td><td>${r.mainGroup}</td><td>${r.secondary}</td><td>${r.secondaryGroup}</td><td>${r.covered?r.covered+"二值覆盖":r.backup}</td><td>${r.quality}</td></tr>`).join("");
   const html=`<html><head><meta charset="UTF-8"></head><body><table border="1"><tr><th>日期</th><th>主班</th><th>组别</th><th>副班</th><th>组别</th><th>二线</th><th>班次提示</th></tr>${rows}</table></body></html>`;
-  download("\ufeff"+html,`ICU排班_${data.cycle.month}.xls`,"application/vnd.ms-excel");
+  download("\ufeff"+html,`排班_${data.cycle.month}.xls`,"application/vnd.ms-excel");
 }
 function download(content,name,type){const blob=new Blob([content],{type});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),500);}
 function resetApp(){if(!confirm("确定清空当前项目吗？"))return;data=blankData();save();init();toast("已清空");}
@@ -1242,12 +1242,12 @@ function esc(value){const div=document.createElement("div");div.textContent=valu
 function loadNovemberSample(){
   if(data.people.length&&!confirm("将覆盖当前人员和搭档，继续吗？"))return;
   const rows=[
-    ["彭翼","主班类型","重症","A组","A组",3,1,1],["梁炜琳","主班类型","进修","A组","",3,1,1],["张卫文","主班类型","麻醉","A组","",2,0,1],
-    ["严晓棠","副班类型","麻醉","A组","",1,1,1],["强之玮","副班类型","其他","A组","",2,0,1],["王娟","副班类型","其他","A组","",2,0,1],
-    ["卿时珍","主班类型","胸外","B组","",3,0,1],["黄嘉梁","主班类型","麻醉","B组","B组",3,1,1],["陈锵","主班类型","进修","B组","B组",3,1,1],
-    ["吴艺佳","主班类型","其他","B组","B组",2,1,0],["卢泽广","副班类型","麻醉","B组","B组",1,1,1],["王婷艳","副班类型","其他","B组","B组",2,1,1],
-    ["廖剑波","主班类型","胸外","C组","",3,0,1],["孟宽","主班类型","进修","C组","",3,1,1],["王斯琦","主班类型","其他","C组","C组",2,1,0],
-    ["谭天","副班类型","麻醉","C组","",2,1,1],["黄沐晨","副班类型","其他","C组","",2,0,1],["苏晓群","副班类型","其他","C组","C组",2,1,1]
+    ["成员A","主班类型","关键岗位","A组","A组",3,1,1],["成员B","主班类型","进修","A组","",3,1,1],["成员C","主班类型","支撑岗位","A组","",2,0,1],
+    ["成员D","副班类型","支撑岗位","A组","",1,1,1],["成员E","副班类型","其他","A组","",2,0,1],["成员F","副班类型","其他","A组","",2,0,1],
+    ["成员G","主班类型","专业岗","B组","",3,0,1],["成员H","主班类型","支撑岗位","B组","B组",3,1,1],["成员I","主班类型","进修","B组","B组",3,1,1],
+    ["成员J","主班类型","其他","B组","B组",2,1,0],["成员K","副班类型","支撑岗位","B组","B组",1,1,1],["成员L","副班类型","其他","B组","B组",2,1,1],
+    ["成员M","主班类型","专业岗","C组","",3,0,1],["成员N","主班类型","进修","C组","",3,1,1],["成员O","主班类型","其他","C组","C组",2,1,0],
+    ["成员P","副班类型","支撑岗位","C组","",2,1,1],["成员Q","副班类型","其他","C组","",2,0,1],["成员R","副班类型","其他","C组","C组",2,1,1]
   ];
   data.people=rows.map(r=>({name:r[0],role:r[1],type:r[2],group:r[3],oldGroup:r[4],level:r[5],oldICU:!!r[6],active:!!r[7],unavailableDates:[],note:""}));
   data.pairs=[];save();renderAll();autoPair();
