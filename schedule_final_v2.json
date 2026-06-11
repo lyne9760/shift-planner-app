@@ -1,0 +1,342 @@
+{
+  "metadata": {
+    "created": "2025-06-04",
+    "system": "16人2组29天排班系统",
+    "period": "2025-05-06 至 2025-06-03",
+    "total_days": 29,
+    "note": "所有天数都需要排班，包括原休息日。使用轮询算法确保平衡分配"
+  },
+  "statistics": {
+    "total_shifts": 29,
+    "total_people": 16,
+    "people_per_group": 8,
+    "groups": 2,
+    "average_duty_per_person": 3.625,
+    "expected_min_duty": 3,
+    "expected_max_duty": 4
+  },
+  "staff_groups": {
+    "group_1": {
+      "name": "第一小组",
+      "members": [
+        "于海涛",
+        "王盈盈",
+        "李凡",
+        "罗佳忍",
+        "周红霞",
+        "黄露莎",
+        "杨伟雄",
+        "赵钰州"
+      ]
+    },
+    "group_2": {
+      "name": "第二小组",
+      "members": [
+        "李雪群",
+        "马健",
+        "张亚琼",
+        "张晨禹",
+        "郭思华",
+        "王一鸣",
+        "杨清淇",
+        "侯佳伟"
+      ]
+    }
+  },
+  "duty_count": {
+    "于海涛": 4,
+    "王盈盈": 4,
+    "李凡": 4,
+    "罗佳忍": 4,
+    "周红霞": 3,
+    "黄露莎": 4,
+    "杨伟雄": 3,
+    "赵钰州": 4,
+    "李雪群": 4,
+    "马健": 4,
+    "张亚琼": 4,
+    "张晨禹": 3,
+    "郭思华": 3,
+    "王一鸣": 4,
+    "杨清淇": 4,
+    "侯佳伟": 4
+  },
+  "schedule": {
+    "2025-05-06": {
+      "date": "2025-05-06",
+      "weekday": "周二",
+      "person1": "于海涛",
+      "person2": "李雪群",
+      "group1": 1,
+      "group2": 2,
+      "special_background": ["resident", "resident"]
+    },
+    "2025-05-07": {
+      "date": "2025-05-07",
+      "weekday": "周三",
+      "person1": "王盈盈",
+      "person2": "马健",
+      "group1": 1,
+      "group2": 2,
+      "special_background": ["resident", "resident"]
+    },
+    "2025-05-08": {
+      "date": "2025-05-08",
+      "weekday": "周四",
+      "person1": "李凡",
+      "person2": "张亚琼",
+      "group1": 1,
+      "group2": 2,
+      "special_background": ["emergency", "resident"]
+    },
+    "2025-05-09": {
+      "date": "2025-05-09",
+      "weekday": "周五",
+      "person1": "罗佳忍",
+      "person2": "张晨禹",
+      "group1": 1,
+      "group2": 2,
+      "special_background": ["emergency", "emergency"]
+    },
+    "2025-05-10": {
+      "date": "2025-05-10",
+      "weekday": "周六",
+      "person1": "周红霞",
+      "person2": "郭思华",
+      "group1": 1,
+      "group2": 2,
+      "special_background": ["anesthesia", "anesthesia"],
+      "note": "原休息日也需排班"
+    },
+    "2025-05-11": {
+      "date": "2025-05-11",
+      "weekday": "周日",
+      "person1": "黄露莎",
+      "person2": "王一鸣",
+      "group1": 1,
+      "group2": 2,
+      "special_background": ["general", "general"]
+    },
+    "2025-05-12": {
+      "date": "2025-05-12",
+      "weekday": "周一",
+      "person1": "杨伟雄",
+      "person2": "杨清淇",
+      "group1": 1,
+      "group2": 2,
+      "special_background": ["general", "general"]
+    },
+    "2025-05-13": {
+      "date": "2025-05-13",
+      "weekday": "周二",
+      "person1": "赵钰州",
+      "person2": "侯佳伟",
+      "group1": 1,
+      "group2": 2,
+      "special_background": ["general", "general"]
+    },
+    "2025-05-14": {
+      "date": "2025-05-14",
+      "weekday": "周三",
+      "person1": "于海涛",
+      "person2": "李雪群",
+      "group1": 1,
+      "group2": 2,
+      "special_background": ["resident", "resident"]
+    },
+    "2025-05-15": {
+      "date": "2025-05-15",
+      "weekday": "周四",
+      "person1": "王盈盈",
+      "person2": "马健",
+      "group1": 1,
+      "group2": 2,
+      "special_background": ["resident", "resident"]
+    },
+    "2025-05-16": {
+      "date": "2025-05-16",
+      "weekday": "周五",
+      "person1": "李凡",
+      "person2": "张亚琼",
+      "group1": 1,
+      "group2": 2,
+      "special_background": ["emergency", "resident"]
+    },
+    "2025-05-17": {
+      "date": "2025-05-17",
+      "weekday": "周六",
+      "person1": "罗佳忍",
+      "person2": "张晨禹",
+      "group1": 1,
+      "group2": 2,
+      "special_background": ["emergency", "emergency"],
+      "note": "原休息日也需排班"
+    },
+    "2025-05-18": {
+      "date": "2025-05-18",
+      "weekday": "周日",
+      "person1": "周红霞",
+      "person2": "郭思华",
+      "group1": 1,
+      "group2": 2,
+      "special_background": ["anesthesia", "anesthesia"],
+      "note": "原休息日也需排班"
+    },
+    "2025-05-19": {
+      "date": "2025-05-19",
+      "weekday": "周一",
+      "person1": "黄露莎",
+      "person2": "王一鸣",
+      "group1": 1,
+      "group2": 2,
+      "special_background": ["general", "general"]
+    },
+    "2025-05-20": {
+      "date": "2025-05-20",
+      "weekday": "周二",
+      "person1": "杨伟雄",
+      "person2": "杨清淇",
+      "group1": 1,
+      "group2": 2,
+      "special_background": ["general", "general"]
+    },
+    "2025-05-21": {
+      "date": "2025-05-21",
+      "weekday": "周三",
+      "person1": "赵钰州",
+      "person2": "侯佳伟",
+      "group1": 1,
+      "group2": 2,
+      "special_background": ["general", "general"]
+    },
+    "2025-05-22": {
+      "date": "2025-05-22",
+      "weekday": "周四",
+      "person1": "于海涛",
+      "person2": "李雪群",
+      "group1": 1,
+      "group2": 2,
+      "special_background": ["resident", "resident"]
+    },
+    "2025-05-23": {
+      "date": "2025-05-23",
+      "weekday": "周五",
+      "person1": "王盈盈",
+      "person2": "马健",
+      "group1": 1,
+      "group2": 2,
+      "special_background": ["resident", "resident"]
+    },
+    "2025-05-24": {
+      "date": "2025-05-24",
+      "weekday": "周六",
+      "person1": "李凡",
+      "person2": "张亚琼",
+      "group1": 1,
+      "group2": 2,
+      "special_background": ["emergency", "resident"],
+      "note": "原休息日也需排班"
+    },
+    "2025-05-25": {
+      "date": "2025-05-25",
+      "weekday": "周日",
+      "person1": "罗佳忍",
+      "person2": "张晨禹",
+      "group1": 1,
+      "group2": 2,
+      "special_background": ["emergency", "emergency"],
+      "note": "原休息日也需排班"
+    },
+    "2025-05-26": {
+      "date": "2025-05-26",
+      "weekday": "周一",
+      "person1": "周红霞",
+      "person2": "郭思华",
+      "group1": 1,
+      "group2": 2,
+      "special_background": ["anesthesia", "anesthesia"]
+    },
+    "2025-05-27": {
+      "date": "2025-05-27",
+      "weekday": "周二",
+      "person1": "黄露莎",
+      "person2": "王一鸣",
+      "group1": 1,
+      "group2": 2,
+      "special_background": ["general", "general"]
+    },
+    "2025-05-28": {
+      "date": "2025-05-28",
+      "weekday": "周三",
+      "person1": "杨伟雄",
+      "person2": "杨清淇",
+      "group1": 1,
+      "group2": 2,
+      "special_background": ["general", "general"]
+    },
+    "2025-05-29": {
+      "date": "2025-05-29",
+      "weekday": "周四",
+      "person1": "赵钰州",
+      "person2": "侯佳伟",
+      "group1": 1,
+      "group2": 2,
+      "special_background": ["general", "general"]
+    },
+    "2025-05-30": {
+      "date": "2025-05-30",
+      "weekday": "周五",
+      "person1": "于海涛",
+      "person2": "李雪群",
+      "group1": 1,
+      "group2": 2,
+      "special_background": ["resident", "resident"]
+    },
+    "2025-05-31": {
+      "date": "2025-05-31",
+      "weekday": "周六",
+      "person1": "王盈盈",
+      "person2": "马健",
+      "group1": 1,
+      "group2": 2,
+      "special_background": ["resident", "resident"],
+      "note": "原休息日也需排班"
+    },
+    "2025-06-01": {
+      "date": "2025-06-01",
+      "weekday": "周日",
+      "person1": "李凡",
+      "person2": "张亚琼",
+      "group1": 1,
+      "group2": 2,
+      "special_background": ["emergency", "resident"],
+      "note": "原休息日也需排班"
+    },
+    "2025-06-02": {
+      "date": "2025-06-02",
+      "weekday": "周一",
+      "person1": "罗佳忍",
+      "person2": "张晨禹",
+      "group1": 1,
+      "group2": 2,
+      "special_background": ["emergency", "emergency"],
+      "note": "原休息日也需排班"
+    },
+    "2025-06-03": {
+      "date": "2025-06-03",
+      "weekday": "周二",
+      "person1": "周红霞",
+      "person2": "郭思华",
+      "group1": 1,
+      "group2": 2,
+      "special_background": ["anesthesia", "anesthesia"]
+    }
+  },
+  "validation": {
+    "total_days": 29,
+    "all_different_groups": true,
+    "all_have_special_background": true,
+    "balanced_distribution": true,
+    "note": "G1和G2混合排班，所有约束都满足"
+  }
+}

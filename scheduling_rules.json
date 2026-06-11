@@ -1,0 +1,136 @@
+{
+  "version": "1.0",
+  "scheduleCycle": {
+    "start": "first_workday_of_current_month",
+    "end": "max(last_calendar_day_of_current_month, day_before_first_workday_of_next_month)",
+    "calendarSource": "hospital_calendar_or_manual_marking",
+    "darkCellsAreHolidays": true
+  },
+  "previousMonthContinuity": {
+    "required": true,
+    "importLastDays": 7,
+    "carryOverMinimumGap": true,
+    "carryOverDutyQuality": true,
+    "firstDaysRequiringExperiencedStaff": 2,
+    "experiencedDefinition": "appeared_in_any_ICU_in_previous_month",
+    "minimumExperiencedPeoplePerFirstDayPair": 1
+  },
+  "rolesPerDay": {
+    "main": 1,
+    "secondary": 1,
+    "backup": 1
+  },
+  "firstDuty": {
+    "groupCount": 3,
+    "groupNames": ["A组", "B组", "C组"],
+    "mainAndSecondaryMustBeDifferentGroups": true,
+    "allowFixedPairs": true,
+    "fixedPairsMustBeDifferentGroups": true,
+    "mainSecondaryHeadcountShouldBeBalanced": true,
+    "mainCandidateTypes": [
+      "进修",
+      "重症",
+      "高年资麻醉",
+      "负责人确认的高年资人员"
+    ],
+    "groupBalanceDimensions": [
+      "总人数",
+      "主班类型",
+      "实际可排主班",
+      "副班类型",
+      "进修",
+      "重症背景",
+      "麻醉背景",
+      "高年资或有证",
+      "上月ICU老人员",
+      "综合实力"
+    ],
+    "groupContinuity": {
+      "preferPreviousMonthGroup": true,
+      "minimizeGroupChanges": true,
+      "newPersonnelFillBalanceGaps": true,
+      "recordChangeReason": true,
+      "mayChangeFor": [
+        "可排主班不足",
+        "主班类型严重失衡",
+        "进修人员严重失衡",
+        "综合实力明显失衡",
+        "无法形成跨组搭档"
+      ]
+    },
+    "allowGroupingWithoutScheduling": true
+  },
+  "backupDuty": {
+    "ignoreSections": ["三值", "行政"],
+    "secondDutyCanCoverBackup": true,
+    "coveredDateNeedsNoBackup": true,
+    "balanceTotalCount": true,
+    "balanceWeekdayCategories": true,
+    "balanceHolidays": true
+  },
+  "minimumGap": {
+    "minimumCalendarDayDifference": 3,
+    "fullDaysOffBetweenDuties": 2,
+    "noConsecutiveDays": true,
+    "includePreviousMonth": true
+  },
+  "dutyQuality": {
+    "Thursday": {
+      "nextDayCompensatoryLeave": true,
+      "weight": 4,
+      "label": "黄金班"
+    },
+    "Sunday": {
+      "nextDayCompensatoryLeave": true,
+      "weight": 3,
+      "label": "优质周末班"
+    },
+    "MondayToWednesday": {
+      "nextDayCompensatoryLeave": true,
+      "weight": 2,
+      "label": "普通可补休班"
+    },
+    "Friday": {
+      "nextDayCompensatoryLeave": false,
+      "weight": 1,
+      "label": "无补休班"
+    },
+    "Saturday": {
+      "nextDayCompensatoryLeave": false,
+      "weight": 1,
+      "label": "无补休班"
+    },
+    "compensationRule": "people_with_more_total_duties_should_receive_more_Thursday_or_Sunday_duties"
+  },
+  "hardConstraints": [
+    "每日岗位完整",
+    "主副班跨组",
+    "不排班人员不得进入班表",
+    "二值覆盖日不得重复排二线",
+    "满足个人禁排日期",
+    "满足最小间隔",
+    "前两天至少一名上月ICU老人员",
+    "启用固定搭档时严格按绑定关系"
+  ],
+  "softConstraints": [
+    "总次数差最小",
+    "主班次数均衡",
+    "副班次数均衡",
+    "二线次数均衡",
+    "周五周六均衡",
+    "周四周日均衡",
+    "多排班者获得优质班补偿",
+    "减少重复搭档",
+    "上月人员尽量保留原组并减少换组"
+  ],
+  "output": {
+    "excelLayout": "dates_as_columns_people_or_pairs_as_rows",
+    "markDutyWith": "值",
+    "darkHolidayColumns": true,
+    "includeGroupSheet": true,
+    "includeFixedPairSheet": true,
+    "includeStatistics": true,
+    "includeValidation": true,
+    "includeJson": true
+  }
+}

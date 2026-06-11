@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>医院排班系统 - 心胸外科ICU</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+        
+        .content {
+            padding: 30px;
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 30px;
+        }
+        
+        .panel {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .panel h2 {
+            font-size: 1.3em;
+            margin-bottom: 20px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .panel h2::before {
+            content: '📋';
+        }
+        
+        .staff-group {
+            margin-bottom: 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+        }
+        
+        .staff-group h3 {
+            background: #667eea;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            font-size: 0.95em;
+        }
+        
+        .staff-item {
+            padding: 8px;
+            margin: 5px 0;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.95em;
+        }
+        
+        .staff-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: bold;
+            margin-left: 5px;
+        }
+        
+        .badge-resident {
+            background: #FFE5CC;
+            color: #FF6B35;
+        }
+        
+        .badge-emergency {
+            background: #FFE5E5;
+            color: #E63946;
+        }
+        
+        .badge-anesthesia {
+            background: #E5F3FF;
+            color: #0066CC;
+        }
+        
+        .schedule-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        
+        .schedule-table thead {
+            background: #667eea;
+            color: white;
+        }
+        
+        .schedule-table th,
+        .schedule-table td {
+            padding: 12px;
+            text-align: center;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .schedule-table th {
+            font-weight: bold;
+        }
+        
+        .schedule-table tbody tr:hover {
+            background: #f0f0f0;
+        }
+        
+        .rest-day {
+            background: #f0f0f0;
+            color: #999;
+        }
+        
+        .workday {
+            background: white;
+        }
+        
+        .date-cell {
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .weekend {
+            color: #E63946;
+        }
+        
+        .duty-cell {
+            text-align: left;
+            font-size: 0.9em;
+        }
+        
+        .duty-pair {
+            background: #E7F3FF;
+            padding: 6px;
+            border-radius: 4px;
+            margin: 2px 0;
+            border-left: 3px solid #667eea;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+            border-top: 3px solid #667eea;
+        }
+        
+        .stat-card .label {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 8px;
+        }
+        
+        .stat-card .value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 1em;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-secondary {
+            background: #e0e0e0;
+            color: #333;
+        }
+        
+        .btn-secondary:hover {
+            background: #d0d0d0;
+        }
+        
+        .footer {
+            padding: 20px;
+            background: #f8f9fa;
+            border-top: 1px solid #ddd;
+            text-align: center;
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        @media (max-width: 1024px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 1.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏥 医院排班系统</h1>
+            <p>心胸外科ICU一值、二值均衡排班</p>
+            <p style="font-size: 0.9em; margin-top: 10px;">2025年5月6日 - 6月3日</p>
+        </div>
+        
+        <div class="content">
+            <!-- 左侧：人员信息 -->
+            <div>
+                <div class="panel">
+                    <h2>人员信息</h2>
+                    
+                    <div class="staff-group">
+                        <h3>🟦 第一小组 (4人)</h3>
+                        <div class="staff-item">
+                            <span>于海涛</span>
+                            <span><span class="staff-badge badge-resident">进修</span></span>
+                        </div>
+                        <div class="staff-item">
+                            <span>王盈盈</span>
+                            <span><span class="staff-badge badge-resident">进修</span></span>
+                        </div>
+                        <div class="staff-item">
+                            <span>李凡</span>
+                            <span><span class="staff-badge badge-emergency">重症</span></span>
+                        </div>
+                        <div class="staff-item">
+                            <span>黄露莎</span>
+                            <span><span class="staff-badge">普通</span></span>
+                        </div>
+                    </div>
+                    
+                    <div class="staff-group">
+                        <h3>🟩 第二小组 (3人)</h3>
+                        <div class="staff-item">
+                            <span>李雪群</span>
+                            <span><span class="staff-badge badge-resident">进修</span></span>
+                        </div>
+                        <div class="staff-item">
+                            <span>罗佳忍</span>
+                            <span><span class="staff-badge badge-emergency">重症</span></span>
+                        </div>
+                        <div class="staff-item">
+                            <span>周红霞</span>
+                            <span><span class="staff-badge badge-anesthesia">麻醉</span></span>
+                        </div>
+                    </div>
+                    
+                    <div class="staff-group">
+                        <h3>🟨 第三小组 (4人)</h3>
+                        <div class="staff-item">
+                            <span>马健</span>
+                            <span><span class="staff-badge badge-resident">进修</span></span>
+                        </div>
+                        <div class="staff-item">
+                            <span>张亚琼</span>
+                            <span><span class="staff-badge badge-resident">进修</span></span>
+                        </div>
+                        <div class="staff-item">
+                            <span>张晨禹</span>
+                            <span><span class="staff-badge badge-emergency">重症</span></span>
+                        </div>
+                        <div class="staff-item">
+                            <span>赵钰州</span>
+                            <span><span class="staff-badge">普通</span></span>
+                        </div>
+                    </div>
+                    
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="label">总人数</div>
+                            <div class="value">11</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="label">小组数</div>
+                            <div class="value">3</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="label">进修医生</div>
+                            <div class="value">5</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 右侧：排班表 -->
+            <div>
+                <table class="schedule-table" id="scheduleTable">
+                    <thead>
+                        <tr>
+                            <th style="width: 12%">日期</th>
+                            <th style="width: 10%">星期</th>
+                            <th style="width: 78%">排班信息</th>
+                        </tr>
+                    </thead>
+                    <tbody id="scheduleBody">
+                        <!-- 动态生成 -->
+                    </tbody>
+                </table>
+                
+                <div class="button-group">
+                    <button class="btn-primary" onclick="generateSchedule()">🔄 生成排班</button>
+                    <button class="btn-secondary" onclick="downloadSchedule()">📥 下载Excel</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>排班系统 v1.0 | 确保均衡、科学的人员安排 | 系统要求：不同小组搭配、至少一名特殊背景人员</p>
+        </div>
+    </div>
+    
+    <script>
+        // 从 JSON 数据导入排班信息
+        const scheduleData = {
+            // 5月份数据
+            '2025-05-06': { staff1: '李雪群', staff2: '李凡', group1: 2, group2: 1 },
+            '2025-05-07': { staff1: '于海涛', staff2: '罗佳忍', group1: 1, group2: 2 },
+            '2025-05-08': { staff1: '李雪群', staff2: '张晨禹', group1: 2, group2: 3 },
+            '2025-05-09': { staff1: '王盈盈', staff2: '周红霞', group1: 1, group2: 2 },
+            '2025-05-12': { staff1: '马健', staff2: '李凡', group1: 3, group2: 1 },
+            '2025-05-13': { staff1: '李雪群', staff2: '赵钰州', group1: 2, group2: 1 },
+            '2025-05-14': { staff1: '于海涛', staff2: '周红霞', group1: 1, group2: 2 },
+            '2025-05-16': { staff1: '张亚琼', staff2: '李凡', group1: 3, group2: 1 },
+            '2025-05-19': { staff1: '李雪群', staff2: '黄露莎', group1: 2, group2: 1 },
+            '2025-05-20': { staff1: '马健', staff2: '罗佳忍', group1: 3, group2: 2 },
+            '2025-05-21': { staff1: '王盈盈', staff2: '李凡', group1: 1, group2: 1 },
+            '2025-05-22': { staff1: '李雪群', staff2: '李凡', group1: 2, group2: 1 },
+            '2025-05-23': { staff1: '于海涛', staff2: '周红霞', group1: 1, group2: 2 },
+            '2025-05-26': { staff1: '张亚琼', staff2: '李凡', group1: 3, group2: 1 },
+            '2025-05-27': { staff1: '李雪群', staff2: '黄露莎', group1: 2, group2: 1 },
+            '2025-05-28': { staff1: '马健', staff2: '罗佳忍', group1: 3, group2: 2 },
+            '2025-05-29': { staff1: '王盈盈', staff2: '李凡', group1: 1, group2: 1 },
+            '2025-05-30': { staff1: '李雪群', staff2: '周红霞', group1: 2, group2: 2 },
+            '2025-06-03': { staff1: '于海涛', staff2: '罗佳忍', group1: 1, group2: 2 },
+        };
+        
+        const restDays = [
+            '2025-05-10', '2025-05-11',
+            '2025-05-17', '2025-05-18',
+            '2025-05-24', '2025-05-25',
+            '2025-05-31', '2025-06-01', '2025-06-02'
+        ];
+        
+        const weekDays = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+        
+        function generateSchedule() {
+            const tbody = document.getElementById('scheduleBody');
+            tbody.innerHTML = '';
+            
+            let startDate = new Date(2025, 4, 6); // 5月6日
+            let endDate = new Date(2025, 5, 3);   // 6月3日
+            
+            let currentDate = new Date(startDate);
+            
+            while (currentDate <= endDate) {
+                const dateStr = currentDate.toISOString().split('T')[0];
+                const dayOfWeek = currentDate.getDay();
+                const weekDay = weekDays[(dayOfWeek + 6) % 7]; // 中国周一是0
+                
+                const row = document.createElement('tr');
+                
+                const dateCell = document.createElement('td');
+                dateCell.classList.add('date-cell');
+                if (dayOfWeek === 0 || dayOfWeek === 6) {
+                    dateCell.classList.add('weekend');
+                }
+                dateCell.textContent = dateStr;
+                
+                const dayCell = document.createElement('td');
+                dayCell.textContent = weekDay;
+                if (dayOfWeek === 0 || dayOfWeek === 6) {
+                    dayCell.classList.add('weekend');
+                }
+                
+                const dutyCell = document.createElement('td');
+                dutyCell.classList.add('duty-cell');
+                
+                if (restDays.includes(dateStr)) {
+                    row.classList.add('rest-day');
+                    dateCell.classList.add('weekend');
+                    dayCell.classList.add('weekend');
+                    dutyCell.textContent = '【休息日】';
+                } else if (scheduleData[dateStr]) {
+                    row.classList.add('workday');
+                    const duty = scheduleData[dateStr];
+                    const pairInfo = `G${duty.group1}+G${duty.group2}`;
+                    dutyCell.innerHTML = `<div class="duty-pair">${duty.staff1} + ${duty.staff2}<br><small style="color:#666">(${pairInfo})</small></div>`;
+                } else {
+                    row.classList.add('workday');
+                    dutyCell.textContent = '未排班';
+                }
+                
+                row.appendChild(dateCell);
+                row.appendChild(dayCell);
+                row.appendChild(dutyCell);
+                tbody.appendChild(row);
+                
+                currentDate.setDate(currentDate.getDate() + 1);
+            }
+        }
+        
+        function downloadSchedule() {
+            alert('Excel下载功能：\n\n系统已生成排班数据，可通过以下方式获取：\n\n1. 运行 Python 脚本导出\n2. 复制表格数据到 Excel\n3. 使用 schedule_plan_2025_05.json 文件');
+        }
+        
+        // 页面加载时生成排班表
+        document.addEventListener('DOMContentLoaded', function() {
+            generateSchedule();
+        });
+    </script>
+</body>
+</html>

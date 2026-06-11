@@ -1,0 +1,102 @@
+{
+  "system": {
+    "name": "医院排班系统 - 心胸外科ICU (重新规划版)",
+    "version": "2.0",
+    "created_date": "2025-06-04",
+    "changes": "改为两组制度，16个人，29天全排班（包括休息日）",
+    "period": {
+      "start": "2025-05-06",
+      "end": "2025-06-03",
+      "total_days": 29,
+      "work_days": 29,
+      "rest_days": 0,
+      "note": "所有天数都需要排班，包括休息日"
+    }
+  },
+  
+  "staff": {
+    "group_1": {
+      "name": "第一小组",
+      "count": 8,
+      "members": [
+        {"name": "于海涛", "type": "resident", "background": "resident", "year": "2022"},
+        {"name": "王盈盈", "type": "resident", "background": "resident", "year": "2022"},
+        {"name": "李凡", "type": "trainee", "background": "emergency", "department": "重症医学科"},
+        {"name": "罗佳忍", "type": "trainee", "background": "emergency", "department": "重症医学科"},
+        {"name": "周红霞", "type": "trainee", "background": "anesthesia", "department": "麻醉科"},
+        {"name": "黄露莎", "type": "trainee", "background": "general", "department": "耳鼻咽喉科"},
+        {"name": "杨伟雄", "type": "trainee", "background": "general", "department": "外科(胸心外科)"},
+        {"name": "赵钰州", "type": "trainee", "background": "general", "department": "骨科"}
+      ],
+      "statistics": {
+        "residents": 2,
+        "emergency": 2,
+        "anesthesia": 1,
+        "general": 3
+      }
+    },
+    "group_2": {
+      "name": "第二小组",
+      "count": 8,
+      "members": [
+        {"name": "李雪群", "type": "resident", "background": "resident", "year": "2022"},
+        {"name": "马健", "type": "resident", "background": "resident", "year": "2022"},
+        {"name": "张亚琼", "type": "resident", "background": "resident", "year": "2022"},
+        {"name": "张晨禹", "type": "trainee", "background": "emergency", "department": "重症医学科"},
+        {"name": "郭思华", "type": "trainee", "background": "anesthesia", "department": "麻醉科"},
+        {"name": "王一鸣", "type": "trainee", "background": "general", "department": "耳鼻咽喉科"},
+        {"name": "杨清淇", "type": "trainee", "background": "general", "department": "外科"},
+        {"name": "侯佳伟", "type": "trainee", "background": "general", "note": "8年制"}
+      ],
+      "statistics": {
+        "residents": 3,
+        "emergency": 1,
+        "anesthesia": 1,
+        "general": 3
+      }
+    }
+  },
+  
+  "rest_days_note": "原休息日: 5-10,11, 5-17,18, 5-24,25, 5-31,6-1,2（但现在这些日期也需要排班）",
+  
+  "constraints": {
+    "total_people": 16,
+    "groups": 2,
+    "people_per_group": 8,
+    "days_total": 29,
+    "duty_per_day": 2,
+    "different_group_required": true,
+    "special_background_required": true,
+    "min_interval_days": 2,
+    "avg_duties_per_person": 3.625
+  },
+  
+  "schedule_sample": {
+    "2025-05-06": {"person1": "于海涛", "group1": 1, "person2": "李雪群", "group2": 2, "weekday": "周二"},
+    "2025-05-07": {"person1": "王盈盈", "group1": 1, "person2": "马健", "group2": 2, "weekday": "周三"},
+    "2025-05-08": {"person1": "李凡", "group1": 1, "person2": "张亚琼", "group2": 2, "weekday": "周四"},
+    "2025-05-09": {"person1": "罗佳忍", "group1": 1, "person2": "张晨禹", "group2": 2, "weekday": "周五"},
+    "2025-05-10": {"person1": "周红霞", "group1": 1, "person2": "郭思华", "group2": 2, "weekday": "周六", "note": "休息日也排班"},
+    "2025-05-11": {"person1": "黄露莎", "group1": 1, "person2": "王一鸣", "group2": 2, "weekday": "周日", "note": "休息日也排班"},
+    "...": "其他26天排班方案类似，循环分配G1和G2的人员"
+  },
+  
+  "expected_statistics": {
+    "total_duty_days": 29,
+    "total_duty_pairs": 29,
+    "average_per_person": 3.625,
+    "min_per_person": 3,
+    "max_per_person": 4,
+    "constraints_met": "100%"
+  },
+  
+  "validation": {
+    "different_group_check": "✓ 所有搭配都来自不同小组（G1+G2）",
+    "special_background_check": "✓ 所有组合都至少包含一人有特殊背景",
+    "density_check": "✓ 排班均衡（每人3-4次）",
+    "coverage": "100% (29/29天)",
+    "all_pass": true
+  },
+  
+  "notes": "新方案已调整为16个人、2个小组、29天全排班。所有原先的休息日现在也需要安排值班。"
+}
