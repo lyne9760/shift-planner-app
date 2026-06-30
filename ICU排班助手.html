@@ -181,13 +181,31 @@
     .pair-list { grid-template-columns: 1fr; }
   }
 
-  @media print {
+  .matrix-wrap { overflow: auto; border: 1px solid var(--line); border-radius: 12px; margin-bottom: 8px; }
+.matrix-table { min-width: 800px; border-collapse: collapse; font-size: 11px; width: 100%; }
+.matrix-table th, .matrix-table td { padding: 5px 6px; border: 1px solid #e9edef; text-align: center; white-space: nowrap; }
+.matrix-table th:first-child, .matrix-table td:first-child { position: sticky; left: 0; background: var(--paper); z-index: 2; text-align: left; min-width: 80px; }
+.matrix-table .block-title { background: #f0f4f6; font-weight: 700; font-size: 13px; color: var(--navy); text-align: left; padding: 8px 12px; }
+.matrix-table .month-header { background: #f5f7f8; font-size: 12px; font-weight: 700; }
+.matrix-table .date-header { background: #f5f7f8; font-size: 10px; }
+.matrix-table .has-duty { background: #d4edda; color: #155724; font-weight: 700; }
+.matrix-table .weekend-col { background: #d7dee4; color: #10283b; font-weight: 700; }
+.matrix-table .holiday-col { background: #fff2ce; }
+.matrix-footer { margin-top: 14px; padding: 14px 16px; border-radius: 10px; background: #f6f8f8; color: #596772; font-size: 12px; line-height: 1.8; }
+.matrix-footer strong { color: var(--navy); }
+.schedule-scroll-old { overflow: auto; border: 1px solid var(--line); border-radius: 12px; max-height: 400px; margin-top: 16px; }
+.schedule-scroll-old summary { padding: 10px 14px; cursor: pointer; font-weight: 600; color: var(--navy); background: #f5f7f8; border-radius: 11px 11px 0 0; }
+
+@media print {
     .sidebar, .topbar, .no-print, .section:not(#section-output) { display: none !important; }
     .app-shell { display: block; }
     main { padding: 0; }
     #section-output { display: block !important; }
     .card { box-shadow: none; border: 0; padding: 0; }
     .schedule-scroll { max-height: none; overflow: visible; border: 0; }
+    .matrix-wrap { overflow: visible; border: 0; }
+    .matrix-table th:first-child, .matrix-table td:first-child { position: static; }
+    .schedule-scroll-old { display: none; }
   }
 </style>
 </head>
@@ -204,7 +222,7 @@
       <button data-section="people"><span class="nav-num">02</span>人员与分组</button>
       <button data-section="pairs"><span class="nav-num">03</span>搭档偏好</button>
       <button data-section="backup"><span class="nav-num">04</span>二线与覆盖</button>
-      <button data-section="output"><span class="nav-num">05</span>生成与导出</button>
+	      <button data-section="output"><span class="nav-num">05</span>生成与导出</button>
     </nav>
     <div class="sidebar-foot">数据仅保存在本机浏览器<br>无需联网，可重复使用</div>
   </aside>
@@ -217,26 +235,32 @@
         <p id="page-subtitle">先确定这一轮排班从哪天开始、在哪里结束。</p>
       </div>
       <div class="top-actions no-print">
-        <button class="btn primary" onclick="document.getElementById('excel-files').click()">上传表格</button>
         <button class="btn" onclick="document.getElementById('import-file').click()">导入项目</button>
         <button class="btn" onclick="exportProject()">导出项目</button>
         <button class="btn danger" onclick="resetApp()">清空</button>
         <input class="file-input" id="import-file" type="file" accept=".json" onchange="importProject(event)">
-        <input class="file-input" id="excel-files" type="file" accept=".xlsx,.xls" multiple onchange="importExcelFiles(event)">
       </div>
     </header>
 
     <section class="section active" id="section-cycle">
-      <div class="card" id="excel-import-card" style="margin-bottom:16px">
-        <div class="card-head">
-          <div>
-            <h3>从现有表格开始</h3>
-            <p class="card-desc">可同时上传当月和上月的排班资料，系统会按表头自动识别。</p>
-          </div>
-          <button class="btn primary" onclick="document.getElementById('excel-files').click()">选择 Excel</button>
+      <div class="grid three" style="margin-bottom:16px">
+        <div class="card">
+          <h3>1. 当月住培轮转安排</h3>
+          <p class="card-desc" style="margin-bottom:12px">先上传本月住培轮转安排表，提取人员信息；第二页自动读取电话号码。</p>
+          <input type="file" id="file-roster" accept=".xlsx,.xls" style="display:block;width:100%;font-size:12px">
+          <div id="roster-status" class="quiet-rule" style="margin-top:8px;font-size:11px">未上传</div>
         </div>
-        <div id="excel-import-result" class="quiet-rule">
-          尚未导入。支持识别人员名单、历史班表和覆盖安排等常见区域。
+        <div class="card">
+          <h3>2. 上个月班表</h3>
+          <p class="card-desc" style="margin-bottom:12px">再上传上月排班表，自动提取延续人员、原组信息和月末连续数据。</p>
+          <input type="file" id="file-prev-schedule" accept=".xlsx,.xls" style="display:block;width:100%;font-size:12px">
+          <div id="prev-status" class="quiet-rule" style="margin-top:8px;font-size:11px">未上传</div>
+        </div>
+        <div class="card">
+          <h3>3. 当月二三值班表</h3>
+          <p class="card-desc" style="margin-bottom:12px">最后上传本月重症二三线值班表，自动识别二值班次、覆盖和假期。</p>
+          <input type="file" id="file-second-duty" accept=".xlsx,.xls" style="display:block;width:100%;font-size:12px">
+          <div id="second-status" class="quiet-rule" style="margin-top:8px;font-size:11px">未上传</div>
         </div>
       </div>
       <div class="metric-row">
@@ -253,7 +277,7 @@
           <div class="form-grid">
             <div class="field">
               <label>排班月份</label>
-              <input type="month" id="month">
+              <input type="month" id="month" onchange="saveCycle()">
             </div>
             <div class="field">
               <label>本月第一个工作日</label>
@@ -308,9 +332,11 @@
         </div>
         <div class="form-grid">
           <div class="field"><label>姓名</label><input id="p-name" placeholder="姓名"></div>
+          <div class="field"><label>工号/学号</label><input id="p-employeeId" placeholder="选填"></div>
+          <div class="field"><label>电话</label><input id="p-phone" placeholder="选填"></div>
           <div class="field"><label>班型</label><select id="p-role"><option>主班类型</option><option>副班类型</option></select></div>
           <div class="field"><label>成分</label><select id="p-type"><option>进修</option><option>重症</option><option>麻醉</option><option>胸外</option><option>其他</option></select></div>
-          <div class="field"><label>本月组别</label><select id="p-group"><option>A组</option><option>B组</option><option>C组</option></select></div>
+          <div class="field"><label>本月组别</label><select id="p-group"><option>A组</option><option>B组</option><option>C组</option></select><div class="inline-check" style="margin-top:4px"><input id="p-group-locked" type="checkbox"><span>锁定分组（自动平衡时保持不变）</span></div></div>
           <div class="field"><label>上月组别（仅记录）</label><select id="p-old-group"><option value="">无记录</option><option>A组</option><option>B组</option><option>C组</option></select></div>
           <div class="field"><label>实力</label><select id="p-level"><option value="3">骨干</option><option value="2" selected>熟练</option><option value="1">一般</option></select></div>
           <div class="field"><label>上月 ICU</label><div class="inline-check"><input id="p-old" type="checkbox"><span>是</span></div></div>
@@ -336,7 +362,7 @@
           </div>
           <div class="table-wrap" style="max-height:520px">
             <table>
-              <thead><tr><th>姓名</th><th>班型</th><th>成分</th><th>组别</th><th>上月组</th><th>不可排日期</th><th>特殊要求</th><th>排班</th><th></th></tr></thead>
+              <thead><tr><th>工号</th><th>姓名</th><th>电话</th><th>班型</th><th>成分</th><th>组别</th><th>上月组</th><th>不可排日期</th><th>特殊要求</th><th>排班</th><th></th></tr></thead>
               <tbody id="people-table"></tbody>
             </table>
           </div>
@@ -370,6 +396,8 @@
           <div class="card-head"><div><h3>二线人员</h3><p class="card-desc">独立轮转，不参与三组。</p></div></div>
           <div class="form-grid">
             <div class="field"><label>姓名</label><input id="b-name" placeholder="姓名或代号"></div>
+            <div class="field"><label>工号</label><input id="b-employeeId" placeholder="选填"></div>
+            <div class="field"><label>电话</label><input id="b-phone" placeholder="选填"></div>
             <div class="field"><label>排班方式</label><select id="b-mode" onchange="toggleBackupCycle()"><option value="normal">常规轮转</option><option value="cycle">固定周期</option></select></div>
             <div class="field"><button class="btn primary" onclick="addBackup()">添加</button></div>
             <div class="field" id="b-cycle-start-wrap" style="display:none"><label>周期起始日期</label><input type="date" id="b-cycle-start"></div>
@@ -401,27 +429,43 @@
       </div>
     </section>
 
-    <section class="section" id="section-output">
-      <div class="card">
+        <section class="section" id="section-output">
+      <div class="card" style="margin-bottom:16px">
         <div class="card-head">
-          <div><h3>排班总表</h3><p class="card-desc">生成后可打印，或导出为 Excel 可直接打开的文件。</p></div>
+          <div><h3>排班总表（矩阵格式）</h3><p class="card-desc">一值 / 二值 两大板块纵向排列，人员为行、日期为列。</p></div>
           <div class="top-actions no-print">
-            <button class="btn primary" onclick="generateSchedule()">生成排班</button>
+            <button class="btn primary" onclick="generateAll()">生成排班</button>
             <button class="btn" onclick="window.print()">打印</button>
             <button class="btn dark" onclick="exportExcel()">导出 Excel</button>
           </div>
         </div>
-        <div id="validation" class="status-strip"></div>
-        <div class="schedule-scroll">
-          <table class="schedule-table">
-            <thead><tr><th>日期</th><th>星期</th><th>主班</th><th>组</th><th>副班</th><th>组</th><th>二线</th><th>班次提示</th></tr></thead>
-            <tbody id="schedule-body"><tr><td colspan="8" class="empty">配置完成后生成排班</td></tr></tbody>
-          </table>
+        <div class="form-grid">
+          <div class="field wide">
+            <label>补充说明（将追加在底部备注中）</label>
+            <input id="remarks-input" placeholder="如：外派人员、支援安排、联系电话等" onchange="saveRemarks()">
+          </div>
         </div>
+        <div id="validation" class="status-strip"></div>
       </div>
-      <div class="grid two" style="margin-top:16px">
+
+      <!-- Matrix output -->
+      <div id="matrix-first"></div>
+      <div id="matrix-backup"></div>
+      <div id="matrix-footer"></div>
+
+      <!-- Old daily-row view (collapsible secondary) -->
+      <details class="schedule-scroll-old" id="daily-detail">
+        <summary>逐日明细（点击展开）</summary>
+        <table class="schedule-table">
+          <thead><tr><th>日期</th><th>星期</th><th>主班</th><th>组</th><th>副班</th><th>组</th><th>加副班</th><th>组</th><th>二线</th><th>班次提示</th></tr></thead>
+          <tbody id="schedule-body"><tr><td colspan="10" class="empty">配置完成后生成排班</td></tr></tbody>
+        </table>
+      </details>
+
+      <!-- Stats cards -->
+      <div class="grid three" style="margin-top:16px">
         <div class="card"><h3>一线个人统计</h3><div class="table-wrap"><table><thead id="first-stats-head"><tr><th>人员</th><th>总次数</th><th>主班次数</th><th>搭档位次数</th><th>周四</th><th>周日</th><th>五/六</th></tr></thead><tbody id="first-stats"></tbody></table></div></div>
-        <div class="card"><h3>二线统计</h3><div class="table-wrap"><table><thead><tr><th>人员</th><th>次数</th><th>周四</th><th>周日</th><th>五/六</th></tr></thead><tbody id="backup-stats"></tbody></table></div></div>
+        <div class="card"><h3>二线统计</h3><div class="table-wrap"><table><thead><tr><th>人员</th><th>次数</th><th>周四</th><th>周五</th><th>周六</th><th>周日</th></tr></thead><tbody id="backup-stats"></tbody></table></div></div>
       </div>
     </section>
   </main>
@@ -435,14 +479,15 @@ const titles = {
   people: ["人员与分组", "按主班、进修、专业背景与综合实力平均分成三组。"],
   pairs: ["搭档偏好", "固定搭档是可选偏好，不合适时系统会自动调整组合。"],
   backup: ["二线与覆盖", "二值覆盖普通二线；固定周期人员的值班日不受二值影响。"],
-  output: ["生成与导出", "完成最后检查，得到横向排班所需的完整数据。"]
+  output: ["生成与导出", "最后检查并导出矩阵排班表。"]
 };
 
 function blankData() {
   return {
     cycle: { month: "", firstWorkday: "", nextFirstWorkday: "", holidays: [] },
-    continuity: { oldICU: [], recent: [] },
-    people: [], pairs: [], backup: [], secondDuty: [], coverage: [], coverageParticipants: [], schedule: []
+    continuity: { oldICU: [], recent: [], previousPeople: [] },
+    people: [], pairs: [], backup: [], resident: [], residentSchedule: [],
+    secondDuty: [], coverage: [], coverageParticipants: [], residentCoverage: [], schedule: [], remarks: ""
   };
 }
 let data = load();
@@ -458,6 +503,14 @@ function toast(message) {
   el.textContent = message; el.classList.add("show");
   setTimeout(() => el.classList.remove("show"), 1800);
 }
+function syncCycleContinuityFields() {
+  const holidays = document.getElementById("holidays");
+  const oldIcu = document.getElementById("old-icu");
+  const recentDuty = document.getElementById("recent-duty");
+  if (holidays) holidays.value = data.cycle.holidays.join("\n");
+  if (oldIcu) oldIcu.value = data.continuity.oldICU.join("、");
+  if (recentDuty) recentDuty.value = data.continuity.recent.join("\n");
+}
 function splitNames(text) {
   return text.split(/[\n,，、;；]+/).map(x => x.trim()).filter(Boolean);
 }
@@ -467,6 +520,46 @@ function dateLines(text) {
 function iso(d) {
   const year = d.getFullYear(), month = String(d.getMonth()+1).padStart(2,"0"), day = String(d.getDate()).padStart(2,"0");
   return `${year}-${month}-${day}`;
+}
+function defaultScheduleMonth(baseDate = new Date()) {
+  const nextMonth = new Date(baseDate.getFullYear(), baseDate.getMonth() + 1, 1);
+  return `${nextMonth.getFullYear()}-${String(nextMonth.getMonth() + 1).padStart(2,"0")}`;
+}
+function hasProjectContent() {
+  return !!(
+    data.people?.length ||
+    data.pairs?.length ||
+    data.backup?.length ||
+    data.resident?.length ||
+    data.residentSchedule?.length ||
+    data.residentCoverage?.length ||
+    data.secondDuty?.length ||
+    data.coverage?.length ||
+    data.schedule?.length ||
+    data.continuity?.oldICU?.length ||
+    data.continuity?.recent?.length ||
+    data.continuity?.previousPeople?.length ||
+    data.remarks
+  );
+}
+function addHolidayDate(ds) {
+  if (!ds || data.cycle.holidays.includes(ds)) return false;
+  data.cycle.holidays.push(ds);
+  return true;
+}
+function ensureWeekendHolidays(month = data.cycle.month) {
+  if (!month) return 0;
+  const [year, monthNo] = month.split("-").map(Number);
+  if (!year || !monthNo) return 0;
+  let added = 0;
+  const lastDay = new Date(year, monthNo, 0).getDate();
+  for (let day = 1; day <= lastDay; day++) {
+    const d = new Date(year, monthNo - 1, day);
+    if (d.getDay() !== 0 && d.getDay() !== 6) continue;
+    if (addHolidayDate(iso(d))) added++;
+  }
+  data.cycle.holidays.sort();
+  return added;
 }
 function parseDate(s) { return new Date(s + "T00:00:00"); }
 function weekday(d) { return "日一二三四五六"[d.getDay()]; }
@@ -492,20 +585,31 @@ document.querySelectorAll(".nav button").forEach(button => {
 });
 
 function init() {
-  const now = new Date();
-  if (!data.cycle.month) data.cycle.month = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}`;
+  const defaultMonth = defaultScheduleMonth();
+  if (!data.cycle.month || (!hasProjectContent() && data.cycle.month < defaultMonth)) {
+    data.cycle.month = defaultMonth;
+  }
+  data.people = (data.people || []).map(p => ({...p, employeeId: p.employeeId || "", phone: p.phone || "", groupLocked: !!p.groupLocked}));
   data.backup = (data.backup || []).map(item => {
     const person=typeof item === "string" ? {name:item,mode:"normal",cycle:"",cycleStart:""} : item;
-    return {...person,unavailableDates:person.unavailableDates||[],note:person.note||""};
+    return {...person,unavailableDates:person.unavailableDates||[],note:person.note||"",employeeId:person.employeeId||"",phone:person.phone||""};
   });
+  data.resident = (data.resident || []).map(item => {
+    const person=typeof item === "string" ? {name:item,mode:"normal",cycle:"",cycleStart:""} : item;
+    return {...person,unavailableDates:person.unavailableDates||[],note:person.note||"",employeeId:person.employeeId||"",phone:person.phone||""};
+  });
+  if (!data.residentSchedule) data.residentSchedule = [];
+  if (!data.residentCoverage) data.residentCoverage = [];
+  if (!data.remarks) data.remarks = "";
   if (!data.secondDuty) data.secondDuty = [];
   if (!data.coverage) data.coverage = [];
+  if (!data.coverageParticipants) data.coverageParticipants = [];
+  if (!data.continuity.previousPeople) data.continuity.previousPeople = [];
+  if (ensureWeekendHolidays()) save();
   document.getElementById("month").value = data.cycle.month;
   document.getElementById("first-workday").value = data.cycle.firstWorkday;
   document.getElementById("next-first-workday").value = data.cycle.nextFirstWorkday;
-  document.getElementById("holidays").value = data.cycle.holidays.join("\n");
-  document.getElementById("old-icu").value = data.continuity.oldICU.join("、");
-  document.getElementById("recent-duty").value = data.continuity.recent.join("\n");
+  syncCycleContinuityFields();
   if (!data.coverageParticipants) data.coverageParticipants = [];
   document.getElementById("coverage-participants").value = data.coverageParticipants.join("、");
   renderAll();
@@ -516,7 +620,9 @@ function saveCycle() {
   data.cycle.firstWorkday = document.getElementById("first-workday").value;
   data.cycle.nextFirstWorkday = document.getElementById("next-first-workday").value;
   data.cycle.holidays = dateLines(document.getElementById("holidays").value);
-  save(); renderMetrics(); toast("周期已保存");
+  const added = ensureWeekendHolidays();
+  syncCycleContinuityFields();
+  save(); renderMetrics(); toast(added ? `周期已保存，已补${added}个周末假期` : "周期已保存");
 }
 function saveContinuity() {
   data.continuity.oldICU = splitNames(document.getElementById("old-icu").value);
@@ -544,9 +650,12 @@ function readPersonForm() {
   const name = document.getElementById("p-name").value.trim();
   return {
     name,
+    employeeId: document.getElementById("p-employeeId").value.trim(),
+    phone: document.getElementById("p-phone").value.trim(),
     role: document.getElementById("p-role").value,
     type: document.getElementById("p-type").value,
     group: document.getElementById("p-group").value,
+    groupLocked: document.getElementById("p-group-locked").checked,
     oldGroup: document.getElementById("p-old-group").value,
     level: Number(document.getElementById("p-level").value),
     oldICU: document.getElementById("p-old").checked,
@@ -577,9 +686,12 @@ function savePerson() {
 function editPerson(index) {
   const p=data.people[index]; editingPersonIndex=index;
   document.getElementById("p-name").value=p.name;
+  document.getElementById("p-employeeId").value=p.employeeId||"";
+  document.getElementById("p-phone").value=p.phone||"";
   document.getElementById("p-role").value=p.role;
   document.getElementById("p-type").value=p.type;
   document.getElementById("p-group").value=p.group;
+  document.getElementById("p-group-locked").checked=!!p.groupLocked;
   document.getElementById("p-old-group").value=p.oldGroup||"";
   document.getElementById("p-level").value=String(p.level||2);
   document.getElementById("p-old").checked=!!p.oldICU;
@@ -593,10 +705,11 @@ function editPerson(index) {
 }
 function cancelPersonEdit(clear=true) {
   editingPersonIndex=-1;
-  ["p-name","p-unavailable","p-note"].forEach(id=>document.getElementById(id).value="");
+  ["p-name","p-employeeId","p-phone","p-unavailable","p-note"].forEach(id=>document.getElementById(id).value="");
   document.getElementById("p-role").value="主班类型";
   document.getElementById("p-type").value="进修";
   document.getElementById("p-group").value="A组";
+  document.getElementById("p-group-locked").checked=false;
   document.getElementById("p-old-group").value="";
   document.getElementById("p-level").value="2";
   document.getElementById("p-old").checked=false;
@@ -623,7 +736,17 @@ function removePerson(index) {
 function autoGroup(silent=false) {
   const groups = ["A组","B组","C组"];
   const score = Object.fromEntries(groups.map(g => [g, { count:0, main:0, trainee:0, power:0 }]));
-  const sorted = [...data.people].sort((a,b) => {
+  // Pre-count locked people in their fixed groups
+  data.people.forEach(person => {
+    if (person.groupLocked && groups.includes(person.group)) {
+      score[person.group].count++;
+      if (person.role === "主班类型") score[person.group].main++;
+      if (person.type === "进修") score[person.group].trainee++;
+      score[person.group].power += person.level;
+    }
+  });
+  const unlocked = data.people.filter(p => !p.groupLocked);
+  const sorted = [...unlocked].sort((a,b) => {
     return b.level - a.level || (b.role === "主班类型") - (a.role === "主班类型") || (b.type === "进修") - (a.type === "进修");
   });
   sorted.forEach(person => {
@@ -639,54 +762,78 @@ function autoGroup(silent=false) {
     if (person.type === "进修") score[target].trainee++;
     score[target].power += person.level;
   });
-  save(); renderAll(); if(!silent)toast("已按人员结构和实力平均分组");
+  save(); renderAll(); if(!silent)toast("已按人员结构和实力平均分组（已锁定人员保持不变）");
 }
 
 function renderPeople() {
   document.getElementById("people-count").textContent = `${data.people.length}人`;
   document.getElementById("people-table").innerHTML = data.people.length ? data.people.map((p,i) => `
     <tr>
-      <td><b>${esc(p.name)}</b></td>
+      	      <td>${esc(p.employeeId||"—")}</td>
+	      <td><b>${esc(p.name)}</b></td>
+	      <td>${esc(p.phone||"—")}</td>
       <td><span class="tag ${p.role === "主班类型" ? "main" : "sub"}">${p.role}</span></td>
       <td>${p.type}</td>
-      <td><span class="tag ${groupClass(p.group)}">${p.group}</span></td>
+      <td><span class="tag ${groupClass(p.group)}">${p.group}${p.groupLocked?" 🔒":""}</span></td>
       <td>${p.oldGroup || "—"}</td>
       <td>${(p.unavailableDates||[]).join("、") || "—"}</td>
       <td title="${esc(p.note||"")}">${esc(p.note||"—")}</td>
       <td>${p.active ? "是" : '<span class="tag off">仅分组</span>'}</td>
       <td><button class="btn small" onclick="editPerson(${i})">编辑</button> <button class="btn small danger" onclick="removePerson(${i})">删除</button></td>
-    </tr>`).join("") : '<tr><td colspan="9" class="empty">尚未录入人员</td></tr>';
+    </tr>`).join("") : '<tr><td colspan="11" class="empty">尚未录入人员，请先回到第一页导入“当月住培轮转安排”</td></tr>';
 
   document.getElementById("group-board").innerHTML = ["A组","B组","C组"].map(group => {
     const people = data.people.filter(p => p.group === group);
     const power = people.reduce((sum,p) => sum+p.level,0);
     return `<div class="group-col">
       <div class="group-title"><span>${group}</span><small>${people.length}人 · 实力${power}</small></div>
-      <div>${people.length ? people.map(p => `<div class="person-card"><b>${esc(p.name)}</b> <span class="tag ${p.role === "主班类型" ? "main" : "sub"}">${p.role.replace("类型","")}</span><small>${p.type}${p.oldGroup ? ` · 上月${p.oldGroup}` : ""}${p.active ? "" : " · 不排班"}</small></div>`).join("") : '<div class="empty">暂无人员</div>'}</div>
+      <div>${people.length ? people.map(p => `<div class="person-card"><b>${esc(p.name)}${p.groupLocked?" 🔒":""}</b> <span class="tag ${p.role === "主班类型" ? "main" : "sub"}">${p.role.replace("类型","")}</span><small>${p.type}${p.oldGroup ? ` · 上月${p.oldGroup}` : ""}${p.active ? "" : " · 不排班"}</small></div>`).join("") : '<div class="empty">暂无人员，请先在第一页导入轮转表</div>'}</div>
     </div>`;
   }).join("");
+}
+
+function suggestPreferredPairs(mainsInput, partnersInput) {
+  const mains = mainsInput || data.people.filter(p => p.active && p.role === "主班类型");
+  const partners = partnersInput || data.people.filter(p => p.active);
+  const unused = [...partners];
+  const pairs = [];
+  const sortedMains = [...mains].sort((a, b) =>
+    Number(!!b.oldICU) - Number(!!a.oldICU) ||
+    (b.level || 0) - (a.level || 0) ||
+    Number(b.type === "进修") - Number(a.type === "进修") ||
+    a.name.localeCompare(b.name, "zh-CN")
+  );
+  sortedMains.forEach(main => {
+    let pool = unused.filter(s => s.name !== main.name && s.group !== main.group);
+    if (!pool.length) pool = partners.filter(s => s.name !== main.name && s.group !== main.group);
+    if (!pool.length) pool = unused.filter(s => s.name !== main.name);
+    if (!pool.length) pool = partners.filter(s => s.name !== main.name);
+    if (!pool.length) return;
+    pool.sort((a, b) => {
+      const roleA = a.role === "副班类型" ? 0 : 1;
+      const roleB = b.role === "副班类型" ? 0 : 1;
+      const oldA = (main.oldICU || a.oldICU) ? 0 : 1;
+      const oldB = (main.oldICU || b.oldICU) ? 0 : 1;
+      const levelA = Math.abs((main.level || 2) - (a.level || 2));
+      const levelB = Math.abs((main.level || 2) - (b.level || 2));
+      return roleA - roleB ||
+        oldA - oldB ||
+        levelA - levelB ||
+        a.name.localeCompare(b.name, "zh-CN");
+    });
+    const chosen = pool[0];
+    pairs.push({ main: main.name, secondary: chosen.name });
+    const index = unused.findIndex(x => x.name === chosen.name);
+    if (index >= 0) unused.splice(index, 1);
+  });
+  return pairs;
 }
 
 function autoPair() {
   const mains = data.people.filter(p => p.active && p.role === "主班类型");
   const partners = data.people.filter(p => p.active);
   if (!mains.length || partners.length < 2) return toast("请至少录入一名主班和另一名参加排班人员");
-  const unused = [...partners], pairs = [];
-  mains.forEach(main => {
-    const candidates = unused.filter(s => s.name !== main.name && s.group !== main.group);
-    const pool = candidates.length ? candidates : partners.filter(s => s.name !== main.name && s.group !== main.group);
-    if (!pool.length) return;
-    pool.sort((a,b) => {
-      const oldA = (main.oldICU || a.oldICU) ? 0 : 1;
-      const oldB = (main.oldICU || b.oldICU) ? 0 : 1;
-      return oldA-oldB || Math.abs(main.level-a.level)-Math.abs(main.level-b.level);
-    });
-    const chosen = pool[0];
-    pairs.push({main:main.name, secondary:chosen.name});
-    const index = unused.findIndex(x => x.name === chosen.name);
-    if (index >= 0) unused.splice(index,1);
-  });
-  data.pairs = pairs;
+  data.pairs = suggestPreferredPairs(mains, partners);
   save(); renderPairs(); toast("已生成跨组搭档建议");
 }
 function updatePair(index, key, value) {
@@ -714,7 +861,7 @@ function renderPairs() {
 }
 
 function addBackup() {
-  const name = document.getElementById("b-name").value.trim();
+  const name = document.getElementById("b-name").value.trim(), employeeId = document.getElementById("b-employeeId").value.trim(), phone = document.getElementById("b-phone").value.trim();
   if (!name || data.backup.some(item => item.name === name)) return;
   const mode=document.getElementById("b-mode").value;
   const cycle=document.getElementById("b-cycle").value.trim();
@@ -722,8 +869,10 @@ function addBackup() {
   const unavailableDates=splitNames(document.getElementById("b-unavailable").value);
   const note=document.getElementById("b-note").value.trim();
   if(mode==="cycle"&&(!cycleStart||!cycle||!/^[值休]+$/.test(cycle)))return toast("固定周期需填写起始日期，并且只使用“值/休”");
-  data.backup.push({name,mode,cycle:mode==="cycle"?cycle:"",cycleStart:mode==="cycle"?cycleStart:"",unavailableDates,note});
+  data.backup.push({name,employeeId,phone,mode,cycle:mode==="cycle"?cycle:"",cycleStart:mode==="cycle"?cycleStart:"",unavailableDates,note});
   document.getElementById("b-name").value="";
+  document.getElementById("b-employeeId").value="";
+  document.getElementById("b-phone").value="";
   document.getElementById("b-unavailable").value="";
   document.getElementById("b-note").value="";
   save(); renderBackup();
@@ -733,6 +882,57 @@ function toggleBackupCycle(){
   document.getElementById("b-cycle-start-wrap").style.display=show?"":"none";
   document.getElementById("b-cycle-wrap").style.display=show?"":"none";
 }
+function addResident() {
+  const name = document.getElementById("r-name").value.trim(), employeeId = document.getElementById("r-employeeId").value.trim(), phone = document.getElementById("r-phone").value.trim();
+  if (!name || data.resident.some(item => item.name === name)) return;
+  const mode=document.getElementById("r-mode").value;
+  const cycle=document.getElementById("r-cycle").value.trim();
+  const cycleStart=document.getElementById("r-cycle-start").value;
+  const unavailableDates=splitNames(document.getElementById("r-unavailable").value);
+  const note=document.getElementById("r-note").value.trim();
+  if(mode==="cycle"&&(!cycleStart||!cycle||!/^[值休]+$/.test(cycle)))return toast("固定周期需填写起始日期，并且只使用“值/休”");
+  data.resident.push({name,employeeId,phone,mode,cycle:mode==="cycle"?cycle:"",cycleStart:mode==="cycle"?cycleStart:"",unavailableDates,note});
+  document.getElementById("r-name").value="";
+  document.getElementById("r-employeeId").value="";
+  document.getElementById("r-unavailable").value="";
+  document.getElementById("r-note").value="";
+  save(); renderResident();
+}
+function toggleResidentCycle(){
+  const show=document.getElementById("r-mode").value==="cycle";
+  document.getElementById("r-cycle-start-wrap").style.display=show?"":"none";
+  document.getElementById("r-cycle-wrap").style.display=show?"":"none";
+}
+function removeResident(index) { data.resident.splice(index,1); save(); renderResident(); }
+function editResidentUnavailable(index) {
+  const person=data.resident[index];
+  const value=prompt(`${person.name} 的不可排日期（多个日期用逗号分隔）`,(person.unavailableDates||[]).join("、"));
+  if(value===null)return;
+  person.unavailableDates=splitNames(value);
+  save();renderResident();toast(`${person.name} 的不可排日期已保存`);
+}
+function editResidentNote(index) {
+  const person=data.resident[index];
+  const value=prompt(`${person.name} 的其他特殊要求（仅作人工复核备注）`,person.note||"");
+  if(value===null)return;
+  person.note=value.trim();
+  save();renderResident();
+}
+function addResidentCoverage() {
+  const date=document.getElementById("rc-date").value, name=document.getElementById("rc-name").value.trim();
+  if (!date || !name) return toast("请填写日期和人员");
+  data.residentCoverage = (data.residentCoverage||[]).filter(x=>x.date!==date);
+  data.residentCoverage.push({date,name});
+  data.residentCoverage.sort((a,b)=>a.date.localeCompare(b.date));
+  document.getElementById("rc-name").value="";
+  save(); renderResident();
+}
+function removeResidentCoverage(index) { (data.residentCoverage||[]).splice?data.residentCoverage.splice(index,1):null; save(); renderResident(); }
+function renderResident() {
+  document.getElementById("resident-chips").innerHTML = data.resident.length ? data.resident.map((item,i)=>`<span class="status-pill ${item.mode==="cycle"?"warn":""}" title="${esc(item.note||"")}">${esc(item.name)}${item.mode==="cycle"?` · 固定${item.cycle.length}天周期`:""}${item.unavailableDates?.length?` · 禁排${item.unavailableDates.length}天`:""} <button onclick="editResidentUnavailable(${i})" style="border:0;background:none;color:inherit">禁排</button><button onclick="editResidentNote(${i})" style="border:0;background:none;color:inherit">备注</button><button onclick="removeResident(${i})" style="border:0;background:none;color:inherit">×</button></span>`).join("") : '<span class="card-desc">尚未添加住院总人员</span>';
+  document.getElementById("resident-coverage-table").innerHTML = (data.residentCoverage||[]).length ? data.residentCoverage.map((x,i)=>`<tr><td>${x.date}</td><td>${esc(x.name)}</td><td><button class="btn small danger" onclick="removeResidentCoverage(${i})">删除</button></td></tr>`).join("") : '<tr><td colspan="3" class="empty">暂无手动覆盖</td></tr>';
+}
+
 function saveCoverageParticipants() {
   data.coverageParticipants = splitNames(document.getElementById("coverage-participants").value);
   rebuildSecondDutyCoverage();
@@ -822,14 +1022,231 @@ function inferMonthFromFilename(name) {
   return match ? `${match[1]}-${String(match[2]).padStart(2,"0")}` : "";
 }
 function monthCompare(a,b) { return a && b ? a.localeCompare(b) : 0; }
+
+// --- Dedicated file import handlers ---
+function extractDetailsFromRoster(workbook) {
+  // Try to read phone numbers and specialty from the second sheet
+  if (workbook.SheetNames.length < 2) return {};
+  const sheet2 = workbook.SheetNames[1];
+  const rows = workbookRows(workbook, sheet2);
+  if (!rows.length) return {};
+  const looksLikeDetailedList = rows.some(row => /ICU|重症|科/.test(String(row[0] || "")) && String(row[3] || "").trim() && /麻醉科|重症医学科|外科|内科|急诊科/.test(String(row[6] || "")));
+  if (looksLikeDetailedList) {
+    const details = {};
+    rows.forEach(row => {
+      const rawName = String(row[3] || "").trim();
+      if (!rawName) return;
+      const specialty = String(row[6] || "").trim();
+      const phoneCell = row.find(cell => /^1[3-9]\d{9}$/.test(String(cell || "").replace(/[^0-9]/g, "")));
+      const phone = phoneCell ? String(phoneCell).replace(/[^0-9]/g, "") : "";
+      details[rawName] = {};
+      if (specialty) details[rawName].specialty = specialty;
+      if (phone) details[rawName].phone = phone;
+    });
+    return details;
+  }
+  // Find header row: look for 电话/手机/联系方式 + 姓名
+  let headerRow = -1, nameCol = -1, phoneCol = -1, specialtyCol = -1;
+  for (let i = 0; i < Math.min(rows.length, 8); i++) {
+    const r = rows[i].map(String);
+    nameCol = r.findIndex(x => /姓名|名字/.test(x));
+    phoneCol = r.findIndex(x => /电话|手机|联系方式/.test(x));
+    specialtyCol = r.findIndex(x => /培训专业|专业|科室/.test(x));
+    if (nameCol >= 0 || phoneCol >= 0 || specialtyCol >= 0) { headerRow = i; break; }
+  }
+  if (phoneCol < 0) {
+    // Try looking for any column that looks like a phone number pattern
+    for (let i = 0; i < Math.min(rows.length, 3); i++) {
+      const r = rows[i].map(String);
+      const maybePhone = r.findIndex(x => /1[3-9]\d{9}/.test(x));
+      if (maybePhone >= 0) { headerRow = i; phoneCol = maybePhone; break; }
+    }
+    // If still no phone column, try to guess: first column with numbers like 1XXXXXXXXXX
+    if (phoneCol < 0) {
+      for (let i = 1; i < Math.min(rows.length, 20); i++) {
+        const r = rows[i].map(String);
+        for (let c = 0; c < r.length; c++) {
+          if (/^1[3-9]\d{9}$/.test(r[c].trim())) {
+            phoneCol = c;
+            if (headerRow < 0) headerRow = 0;
+            break;
+          }
+        }
+        if (phoneCol >= 0) break;
+      }
+    }
+  }
+  if (phoneCol < 0 && specialtyCol < 0) return {};
+  const details = {};
+  for (let i = headerRow + 1; i < rows.length; i++) {
+    const r = rows[i].map(String);
+    const rawName = nameCol >= 0 ? r[nameCol].trim() : '';
+    const rawPhone = phoneCol >= 0 ? r[phoneCol].trim() : "";
+    const specialty = specialtyCol >= 0 ? r[specialtyCol].trim() : "";
+    const phone = rawPhone.replace(/[^0-9]/g, '');
+    const validPhone = /^1[3-9]\d{9}$/.test(phone) || /^\d{7,12}$/.test(phone);
+    if (!rawName || (!validPhone && !specialty)) continue;
+    // Try to match name: if name column found, use it; otherwise just store by cleaned phone
+    const names = rawName ? cleanRosterName(rawName).map(x => x.name) : [];
+    names.forEach(n => {
+      if (!n) return;
+      details[n] = {...(details[n] || {})};
+      if (validPhone) details[n].phone = phone;
+      if (specialty) details[n].specialty = specialty;
+    });
+    if (!names.length && rawName) {
+      // Couldn't parse structured name, try as plain name
+      const plain = rawName.replace(/[（(].*?[）)]/g, '').replace(/\/.*$/, '').trim();
+      if (plain) {
+        details[plain] = {...(details[plain] || {})};
+        if (validPhone) details[plain].phone = phone;
+        if (specialty) details[plain].specialty = specialty;
+      }
+    }
+  }
+  return details;
+}
+
+async function importPrevSchedule(event) {
+  console.log('importPrevSchedule triggered', event);
+  const input = event.target;
+  const file = input.files[0];
+  if (!file) { console.log('importPrevSchedule: no file'); return; }
+  const statusEl = document.getElementById('prev-status');
+  statusEl.innerHTML = '<span style="color:#c9933b">正在读取 ' + esc(file.name) + ' ...</span>';
+  if (typeof XLSX === 'undefined') {
+    statusEl.innerHTML = '<span style="color:#bd5a58">Excel组件未加载，请联网刷新页面后重试</span>';
+    console.error('XLSX is not defined');
+    return;
+  }
+  try {
+    const buffer = await file.arrayBuffer();
+    const workbook = XLSX.read(buffer, { type: 'array', cellDates: true });
+    const result = extractPreviousSchedule(workbook);
+    statusEl.innerHTML = '<span style="color:#16867a">已导入：' + data.continuity.recent.length + '条月末记录</span>';
+    if (result.matched) statusEl.innerHTML += '，匹配到' + result.matched + '名本月人员';
+    if (result.groupUpdates) statusEl.innerHTML += '，' + result.groupUpdates + '条原组信息';
+    syncCycleContinuityFields();
+    save(); renderAll(); toast('上月班表已导入');
+  } catch (e) {
+    console.error('importPrevSchedule error', e);
+    statusEl.innerHTML = '<span style="color:#bd5a58">读取失败：' + esc(e.message) + '</span>';
+  }
+  input.value = '';
+}
+
+async function importSecondDutyFile(event) {
+  console.log('importSecondDutyFile triggered', event);
+  const input = event.target;
+  const file = input.files[0];
+  if (!file) { console.log('importSecondDutyFile: no file'); return; }
+  const statusEl = document.getElementById('second-status');
+  statusEl.innerHTML = '<span style="color:#c9933b">正在读取 ' + esc(file.name) + ' ...</span>';
+  if (typeof XLSX === 'undefined') {
+    statusEl.innerHTML = '<span style="color:#bd5a58">Excel组件未加载，请联网刷新页面后重试</span>';
+    console.error('XLSX is not defined');
+    return;
+  }
+  try {
+    const buffer = await file.arrayBuffer();
+    const fileMonth = inferMonthFromFilename(file.name);
+    let month = data.cycle.month;
+    if (fileMonth && !hasProjectContent()) {
+      month = fileMonth;
+      data.cycle.month = month;
+      document.getElementById('month').value = month;
+      ensureWeekendHolidays(month);
+    } else if (!month && fileMonth) {
+      month = fileMonth;
+      data.cycle.month = month;
+      document.getElementById('month').value = month;
+      ensureWeekendHolidays(month);
+    }
+    const workbook = XLSX.read(buffer, { type: 'array', cellDates: true, cellStyles: true });
+    ensureWeekendHolidays(month);
+    saveCoverageParticipants();
+    const result = extractSecondDuty(workbook);
+    statusEl.innerHTML = '<span style="color:#16867a">已导入：' + result.duties + '个二值班，' + result.coverage + '个覆盖，' + result.holidays + '个假期</span>';
+    syncCycleContinuityFields();
+    save(); renderAll(); toast('二值表已导入');
+  } catch (e) {
+    console.error('importSecondDutyFile error', e);
+    statusEl.innerHTML = '<span style="color:#bd5a58">读取失败：' + esc(e.message) + '</span>';
+  }
+  input.value = '';
+}
+
+async function importRosterFile(event) {
+  console.log('importRosterFile triggered', event);
+  const input = event.target;
+  const file = input.files[0];
+  if (!file) { console.log('importRosterFile: no file'); return; }
+  const statusEl = document.getElementById('roster-status');
+  statusEl.innerHTML = '<span style="color:#c9933b">正在读取 ' + esc(file.name) + ' ...</span>';
+  if (typeof XLSX === 'undefined') {
+    statusEl.innerHTML = '<span style="color:#bd5a58">Excel组件未加载，请联网刷新页面后重试</span>';
+    console.error('XLSX is not defined');
+    return;
+  }
+  try {
+    const buffer = await file.arrayBuffer();
+    const fileMonth = inferMonthFromFilename(file.name);
+    let month = data.cycle.month;
+    if (fileMonth && !hasProjectContent()) {
+      month = fileMonth;
+      data.cycle.month = month;
+      document.getElementById('month').value = month;
+      ensureWeekendHolidays(month);
+    } else if (!month && fileMonth) {
+      month = fileMonth;
+      data.cycle.month = month;
+      document.getElementById('month').value = month;
+      ensureWeekendHolidays(month);
+    }
+    const workbook = XLSX.read(buffer, { type: 'array', cellDates: true });
+    // Extract phone numbers and specialties from sheet 2 BEFORE processing roster
+    const rosterDetails = extractDetailsFromRoster(workbook);
+    // Import roster from sheet 1
+    const isPrevious = month && fileMonth && monthCompare(fileMonth, month) < 0;
+    const result = extractRoster(workbook, isPrevious);
+    const continuityResult = !isPrevious ? applyPreviousPeopleToCurrentRoster() : {matched:0, groupUpdates:0};
+    // Apply phone numbers and specialty-based role overrides to people
+    let phoneCount = 0, mainRoleCount = 0;
+    if (Object.keys(rosterDetails).length) {
+      data.people.forEach(p => {
+        const detail = rosterDetails[p.name];
+        if (!detail) return;
+        if (!p.phone && detail.phone) { p.phone = detail.phone; phoneCount++; }
+        if (/麻醉科|重症医学科/.test(detail.specialty || "")) {
+          if (p.role !== "主班类型") mainRoleCount++;
+          p.role = "主班类型";
+          p.level = Math.max(Number(p.level) || 0, 3);
+          p.type = /重症医学科/.test(detail.specialty) ? "重症" : "麻醉";
+        }
+      });
+    }
+    let status = '<span style="color:#16867a">已导入：' + (isPrevious ? result.names.length + '名老人员' : '读取' + result.names.length + '名人员，新增' + result.count + '名') + '</span>';
+    if (continuityResult.matched) status += '，延续' + continuityResult.matched + '人';
+    if (continuityResult.groupUpdates) status += '，原组' + continuityResult.groupUpdates + '条';
+    if (phoneCount > 0) status += '，' + phoneCount + '人电话已更新';
+    if (mainRoleCount > 0) status += '，' + mainRoleCount + '人自动设为主班';
+    statusEl.innerHTML = status;
+    syncCycleContinuityFields();
+    save(); renderAll(); toast('住培轮转安排已导入');
+  } catch (e) {
+    console.error('importRosterFile error', e);
+    statusEl.innerHTML = '<span style="color:#bd5a58">读取失败：' + esc(e.message) + '</span>';
+  }
+  input.value = '';
+}
 function personDefaults(name, raw, section, inactive) {
   const isTrainee = section === "进修";
   const isCritical = /重症医学科|重症/.test(raw);
-  const seniorAnesthesia = /麻醉科/.test(raw) && /有证/.test(raw);
+  const anesthesia = /麻醉科/.test(raw);
   const seniorCardiac = /胸心外科方向/.test(raw) && /有证/.test(raw);
-  const main = isTrainee || isCritical || seniorAnesthesia || seniorCardiac;
-  let type = isTrainee ? "进修" : isCritical ? "重症" : /麻醉/.test(raw) ? "麻醉" : /胸心/.test(raw) ? "胸外" : "其他";
-  return {name,role:main?"主班类型":"副班类型",type,group:"A组",oldGroup:"",level:main?3:2,oldICU:false,active:!inactive,unavailableDates:[],note:"Excel自动导入，建议复核班型"};
+  const main = isTrainee || isCritical || anesthesia || seniorCardiac;
+  let type = isTrainee ? "进修" : isCritical ? "重症" : anesthesia ? "麻醉" : /胸心/.test(raw) ? "胸外" : "其他";
+  return {name,employeeId:"",phone:"",role:main?"主班类型":"副班类型",type,group:"A组",oldGroup:"",level:main?3:2,oldICU:false,active:!inactive,unavailableDates:[],note:"Excel自动导入，建议复核班型",groupLocked:false};
 }
 function extractRoster(workbook, isPrevious) {
   const rows = workbookRows(workbook, workbook.SheetNames.includes("分科安排") ? "分科安排" : workbook.SheetNames[0]);
@@ -913,17 +1330,122 @@ function extractSecondDuty(workbook) {
   let holidayCount=0;
   for(let c=2;c<dateRow.length;c++){
     const day=Number(dateRow[c]);if(!day)continue;
-    const address=XLSX.utils.encode_cell({r:headerIndex+1,c});
+    const address=XLSX.utils.encode_cell({r:headerIndex,c});
     const d=new Date(year,monthNo-1,day);
     if(styleLooksDark(sheet[address])||d.getDay()===0||d.getDay()===6){
-      const ds=iso(d);if(!data.cycle.holidays.includes(ds)){data.cycle.holidays.push(ds);holidayCount++;}
+      const ds=iso(d);if(addHolidayDate(ds)) holidayCount++;
     }
   }
   data.cycle.holidays.sort();
   return {duties:imported.length,coverage:data.coverage.filter(x=>x.source==="secondDuty"&&x.date.startsWith(month)).length,holidays:holidayCount};
 }
+function normalizeGroupName(value) {
+  const match = String(value || "").match(/[ABC]\s*组/);
+  return match ? match[0].replace(/\s+/g, "") : "";
+}
+function cleanDutyName(value) {
+  return String(value || "")
+    .replace(/[（(].*?[）)]/g, "")
+    .replace(/\[[^\]]*\]/g, "")
+    .replace(/主班|副班|一值|二线|二值|三值|值班/g, "")
+    .trim();
+}
+function extractDutyPeople(value, fallbackGroup) {
+  const text = String(value || "").trim();
+  if (!text) return [];
+  const people = [];
+  for (const match of text.matchAll(/([^，,、;；\/+\s（）()]+)\s*[（(]\s*([ABC]\s*组)\s*[）)]/g)) {
+    const name = cleanDutyName(match[1]);
+    const group = normalizeGroupName(match[2]);
+    if (name) people.push({name, group});
+  }
+  if (people.length) return people;
+  const group = normalizeGroupName(fallbackGroup || text);
+  return text
+    .split(/[，,、;；\/+\s]+/)
+    .map(cleanDutyName)
+    .filter(name => name && name.length <= 8 && !/^\d+$/.test(name) && !/^[ABC]组$/.test(name))
+    .map(name => ({name, group}));
+}
+function inferPreviousScheduleMonth(rows) {
+  const current = data.cycle.month;
+  const base = current ? new Date(`${current}-01T00:00:00`) : new Date();
+  base.setMonth(base.getMonth() - 1);
+  let year = base.getFullYear(), monthNo = base.getMonth() + 1;
+  for (const row of rows.slice(0, 6)) {
+    for (const cell of row) {
+      const match = String(cell || "").match(/(\d{1,2})月/);
+      if (!match) continue;
+      monthNo = Number(match[1]);
+      if (current) {
+        const [currentYear, currentMonth] = current.split("-").map(Number);
+        year = monthNo > currentMonth ? currentYear - 1 : currentYear;
+      }
+      return {year, monthNo};
+    }
+  }
+  return {year, monthNo};
+}
+function parseHorizontalPreviousSchedule(rows) {
+  const dateRowIndex = rows.findIndex(row => row.some(cell => String(cell).trim() === "日期") && row.some(cell => Number.isInteger(Number(cell))));
+  if (dateRowIndex < 0) return {records:[], people:[]};
+  const dateRow = rows[dateRowIndex];
+  const dateCols = dateRow
+    .map((cell, index) => ({day:Number(cell), index}))
+    .filter(item => Number.isInteger(item.day) && item.day >= 1 && item.day <= 31);
+  if (!dateCols.length) return {records:[], people:[]};
+  const sectionIndex = rows.findIndex((row, index) => index > dateRowIndex && row.some(cell => String(cell).includes("一值")));
+  if (sectionIndex < 0) return {records:[], people:[]};
+  let end = rows.findIndex((row, index) => index > sectionIndex && row.some(cell => /住院总|二线|二值|三值|行政/.test(String(cell))));
+  if (end < 0) end = rows.length;
+  const {year, monthNo} = inferPreviousScheduleMonth(rows);
+  const byDate = {};
+  const previousPeople = [];
+  for (let r = sectionIndex + 1; r < end; r++) {
+    const row = rows[r] || [];
+    const label = String(row[1] || row[0] || "").trim();
+    if (!label) continue;
+    const people = extractDutyPeople(label, "");
+    const name = people[0]?.name || cleanDutyName(label);
+    const group = people[0]?.group || "";
+    if (!name || name.length > 8) continue;
+    previousPeople.push({name, group});
+    dateCols.forEach(({day, index}) => {
+      if (!/值/.test(String(row[index] || ""))) return;
+      const ds = `${year}-${String(monthNo).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
+      if (!byDate[ds]) byDate[ds] = [];
+      if (!byDate[ds].includes(name)) byDate[ds].push(name);
+    });
+  }
+  const records = Object.keys(byDate).sort().map(ds => `${ds},${byDate[ds][0]||""},${byDate[ds][1]||""},`);
+  return {records, people:previousPeople};
+}
+function applyPreviousPeopleToCurrentRoster() {
+  const previousPeople = new Map((data.continuity.previousPeople || []).map(p => [p.name, normalizeGroupName(p.group)]));
+  const oldICU = new Set(data.continuity.oldICU || []);
+  let matched = 0, groupUpdates = 0;
+  data.people.forEach(person => {
+    if (!previousPeople.has(person.name) && !oldICU.has(person.name)) return;
+    matched++;
+    oldICU.add(person.name);
+    person.oldICU = true;
+    const group = previousPeople.get(person.name);
+    if (group && person.oldGroup !== group) {
+      person.oldGroup = group;
+      groupUpdates++;
+    }
+  });
+  data.continuity.oldICU = [...oldICU];
+  return {matched, groupUpdates};
+}
 function extractPreviousSchedule(workbook) {
-  let found=0, groupUpdates=0, records=[];
+  let found=0, groupUpdates=0, matched=0, records=[];
+  const previousPeople = new Map();
+  function rememberPreviousPerson(name, group) {
+    const cleanName = cleanDutyName(name);
+    if (!cleanName) return;
+    previousPeople.set(cleanName, normalizeGroupName(group) || previousPeople.get(cleanName) || "");
+  }
   workbook.SheetNames.forEach(name=>{
     const rows=workbookRows(workbook,name);
     const headerIndex=rows.findIndex(row=>row.some(x=>String(x).trim()==="日期")&&row.some(x=>String(x).includes("主班")));
@@ -936,35 +1458,36 @@ function extractPreviousSchedule(workbook) {
       const ds=raw instanceof Date?iso(raw):String(raw).slice(0,10);
       if(!/^\d{4}-\d{2}-\d{2}$/.test(ds))return;
       const main=String(row[mi]||""), sub=String(row[si]||""), backup=String(row[bi]||"");
+      extractDutyPeople(main,row[mgi]).forEach(p=>rememberPreviousPerson(p.name,p.group));
+      extractDutyPeople(sub,row[sgi]).forEach(p=>rememberPreviousPerson(p.name,p.group));
+      extractDutyPeople(backup,"").forEach(p=>rememberPreviousPerson(p.name,p.group));
       records.push(`${ds},${main},${sub},${backup}`);found++;
     });
   });
   if(!records.length){
     const fileSheet=workbook.SheetNames[0], rows=workbookRows(workbook,fileSheet);
-    const headerIndex=rows.findIndex(row=>String(row[0]).includes("一值")&&row.slice(2).some(x=>Number.isInteger(Number(x))));
-    if(headerIndex>=0){
-      const header=rows[headerIndex], monthGuess=data.cycle.month;
-      const currentBase=monthGuess?new Date(`${monthGuess}-01T00:00:00`):new Date();
-      currentBase.setMonth(currentBase.getMonth()-1);
-      const currentYear=currentBase.getFullYear(), currentMonth=currentBase.getMonth()+1;
-      for(let r=headerIndex+1;r<rows.length;r++){
-        if(/二线|二值|三值|行政/.test(String(rows[r][0])))break;
-        const label=String(rows[r][1]||"").trim();if(!label)continue;
-        const names=[...label.matchAll(/([^\s（）()\/]+)[（(]([ABC]组)[）)]/g)].map(m=>({name:m[1],group:m[2]}));
-        const plain=label.split(/\s*\/\s*|\s*\+\s*/).map(x=>x.replace(/[（(].*?[）)]/g,"").trim()).filter(Boolean);
-        for(let c=2;c<header.length;c++){
-          if(String(rows[r][c]).trim()!=="值")continue;
-          const day=Number(header[c]);if(!day)continue;
-          const dutyDate=new Date(currentYear,currentMonth-1,day);
-          const ds=iso(dutyDate), main=plain[0]||"", sub=plain[1]||"";
-          records.push(`${ds},${main},${sub},`);found++;
-        }
-      }
-    }
+    const horizontal = parseHorizontalPreviousSchedule(rows);
+    horizontal.people.forEach(p=>rememberPreviousPerson(p.name,p.group));
+    records.push(...horizontal.records);
+    found += horizontal.records.length;
   }
+  data.continuity.previousPeople = [...previousPeople.entries()].map(([name, group]) => ({name, group}));
+  const oldICU = new Set(data.continuity.oldICU || []);
+  data.people.forEach(person => {
+    if (!previousPeople.has(person.name)) return;
+    matched++;
+    oldICU.add(person.name);
+    if (!person.oldICU) person.oldICU = true;
+    const group = previousPeople.get(person.name);
+    if (group && person.oldGroup !== group) {
+      person.oldGroup = group;
+      groupUpdates++;
+    }
+  });
+  data.continuity.oldICU = [...oldICU];
   records.sort();
   data.continuity.recent=records.slice(-7);
-  return {found,groupUpdates};
+  return {found,groupUpdates,matched};
 }
 async function readExcelFile(file) {
   const buffer=await file.arrayBuffer();
@@ -978,6 +1501,7 @@ async function importExcelFiles(event) {
   if(uploadedMonths.length){
     data.cycle.month=uploadedMonths[uploadedMonths.length-1];
     document.getElementById("month").value=data.cycle.month;
+    ensureWeekendHolidays(data.cycle.month);
   }
   saveCoverageParticipants();
   const currentMonth=data.cycle.month, messages=[], loaded=[];
@@ -993,7 +1517,8 @@ async function importExcelFiles(event) {
   }
   for(const item of loaded.filter(x=>x.type==="currentRoster")){
     const result=extractRoster(item.workbook,false);
-    messages.push(`${item.file.name}：识别为本月轮转表，新增${result.count}名心胸外ICU人员`);
+    const continuityResult=applyPreviousPeopleToCurrentRoster();
+    messages.push(`${item.file.name}：识别为本月轮转表，读取${result.names.length}名心胸外ICU人员，新增${result.count}名、延续${continuityResult.matched}人`);
   }
   for(const item of loaded.filter(x=>x.type==="previousRoster")){
     extractRoster(item.workbook,true);
@@ -1002,7 +1527,7 @@ async function importExcelFiles(event) {
   }
   for(const item of loaded.filter(x=>x.type==="previousSchedule")){
     const result=extractPreviousSchedule(item.workbook);
-    messages.push(`${item.file.name}：识别为上月班表，读取${result.found}条记录、${result.groupUpdates}条原组信息`);
+    messages.push(`${item.file.name}：识别为上月班表，读取${result.found}条记录、匹配${result.matched}名本月人员、${result.groupUpdates}条原组信息`);
   }
   if(data.people.length)autoGroup(true);
   for(const item of loaded.filter(x=>x.type==="secondDuty")){
@@ -1028,6 +1553,15 @@ function recentLastDates() {
   });
   return map;
 }
+function recentBackupOrder() {
+  const order = new Map();
+  data.continuity.recent.forEach((line, index) => {
+    const parts = line.split(/[,，]/).map(x => (x || "").trim()).filter(Boolean);
+    const backup = parts[3];
+    if (backup && !order.has(backup)) order.set(backup, index);
+  });
+  return order;
+}
 function validPairObjects() {
   return data.pairs.map(p => ({
     ...p,
@@ -1035,29 +1569,33 @@ function validPairObjects() {
     subPerson:data.people.find(x=>x.name===p.secondary)
   })).filter(p=>p.mainPerson && p.subPerson && p.mainPerson.active && p.subPerson.active && p.mainPerson.group!==p.subPerson.group);
 }
-function availablePairObjects() {
-  const mains=data.people.filter(p=>p.active&&p.role==="主班类型");
-  const partners=data.people.filter(p=>p.active);
+function availablePairObjects(options={}) {
+  const allowSameGroup=!!options.allowSameGroup;
+  const excluded=new Set(options.excludeNames||[]);
+  const mains=data.people.filter(p=>p.active&&p.role==="主班类型"&&!excluded.has(p.name));
+  const partners=data.people.filter(p=>p.active&&!excluded.has(p.name));
   const preferred=new Set(validPairObjects().map(p=>`${p.main}|${p.secondary}`));
   return mains.flatMap(mainPerson=>partners
-    .filter(subPerson=>subPerson.name!==mainPerson.name&&subPerson.group!==mainPerson.group)
+    .filter(subPerson=>subPerson.name!==mainPerson.name&&(allowSameGroup||subPerson.group!==mainPerson.group))
     .map(subPerson=>({
       main:mainPerson.name,
       secondary:subPerson.name,
       mainPerson,
       subPerson,
-      preferred:preferred.has(`${mainPerson.name}|${subPerson.name}`)
+      preferred:preferred.has(`${mainPerson.name}|${subPerson.name}`),
+      sameGroup:mainPerson.group===subPerson.group
     })));
 }
-function firstLineAvailability() {
+function firstLineAvailability(options={}) {
   const mains=data.people.filter(p=>p.active&&p.role==="主班类型");
   const partners=data.people.filter(p=>p.active);
-  return {mains,partners,pairs:availablePairObjects()};
+  return {mains,partners,pairs:availablePairObjects(options)};
 }
 function qualityScore(d) {
   if (d.getDay()===4) return 4;
   if (d.getDay()===0) return 3;
-  if (d.getDay()===5 || d.getDay()===6) return 1;
+  if (d.getDay()===5) return 1;
+  if (d.getDay()===6) return 2;
   return 2;
 }
 function isUnavailable(person, dutyDate) {
@@ -1087,7 +1625,10 @@ function cycleWorksOn(backupPerson, dutyDate) {
 }
 
 function generateSchedule() {
-  const dates=getPeriod(), firstLine=firstLineAvailability(), pairs=firstLine.pairs, backup=[...data.backup];
+  const dates=getPeriod(), firstLine=firstLineAvailability(), backup=[...data.backup];
+  if (!data.pairs.length) data.pairs = suggestPreferredPairs();
+  const firstLineWithPreferred=firstLineAvailability();
+  const pairs=firstLineWithPreferred.pairs;
   if (!dates.length) return toast("请先设置排班周期");
   if (!firstLine.mains.length) return toast("当前没有参加排班的主班人员，请在人员清单中调整班型");
   if (firstLine.partners.length < 2) return toast("至少需要两名参加一线排班的人员");
@@ -1095,31 +1636,103 @@ function generateSchedule() {
   if (!backup.length) return toast("请先添加二线人员");
   const coverageMap=Object.fromEntries(data.coverage.map(x=>[x.date,x.name]));
   const recent=recentLastDates();
+  const backupOrder=recentBackupOrder();
   const firstLinePeople=data.people.filter(p=>p.active&&(p.role==="主班类型"||p.role==="副班类型"));
   const pStats=Object.fromEntries(firstLinePeople.map(p=>[p.name,{count:0,last:recent[p.name]||"",quality:0,bad:0}]));
   const bStats=Object.fromEntries(backup.map(p=>[p.name,{count:0,last:recent[p.name]||"",quality:0,bad:0}]));
   const result=[];
+  const pairUsage={};
+  pairs.forEach(p => { pairUsage[`${p.main}|${p.secondary}`] = 0; });
+  const coreMains = [...firstLine.mains].sort((a, b) =>
+    Number(!!b.oldICU) - Number(!!a.oldICU) ||
+    (b.level || 0) - (a.level || 0) ||
+    Number(b.type === "进修") - Number(a.type === "进修") ||
+    a.name.localeCompare(b.name, "zh-CN")
+  );
+  const mainTargetCount = coreMains.length ? Math.floor(dates.length / coreMains.length) : 0;
 
   for (let index=0; index<dates.length; index++) {
     const d=dates[index];
     const ds=iso(d), q=qualityScore(d);
-    const availablePairs=pairs.filter(p=>!isUnavailable(p.mainPerson,d)&&!isUnavailable(p.subPerson,d));
-    if(!availablePairs.length){
-      toast(`${ds} 没有可用的跨组主副班组合，请调整特殊要求`);
+    const isSaturday=d.getDay()===6;
+    let baseAvailablePairs=pairs.filter(p=>
+      !isUnavailable(p.mainPerson,d)&&
+      !isUnavailable(p.subPerson,d)
+    );
+    if(!baseAvailablePairs.length&&isSaturday){
+      baseAvailablePairs=availablePairObjects({allowSameGroup:true}).filter(p=>
+        !isUnavailable(p.mainPerson,d)&&
+        !isUnavailable(p.subPerson,d)
+      );
+    }
+    if(!baseAvailablePairs.length){
+      toast(`${ds} 没有可用的跨组主副班组合，请检查当日禁排日期或分组设置`);
       return;
     }
-    const pairChoices=availablePairs.map(p=>{
+    const preferredMainNames = coreMains
+      .filter(person => !isUnavailable(person, d))
+      .sort((a, b) =>
+        pStats[a.name].count - pStats[b.name].count ||
+        ((pStats[a.name].last ? Math.floor((d-parseDate(pStats[a.name].last))/86400000) : 99) - (pStats[b.name].last ? Math.floor((d-parseDate(pStats[b.name].last))/86400000) : 99)) * -1 ||
+        a.name.localeCompare(b.name, "zh-CN")
+      )
+      .map(person => person.name);
+    const mainFocusedPairs = baseAvailablePairs.filter(p => preferredMainNames.slice(0, Math.max(3, Math.ceil(coreMains.length / 2))).includes(p.main));
+    const availablePairs=mainFocusedPairs.length ? mainFocusedPairs : baseAvailablePairs;
+    const targetPerPerson=((index+1)*2)/Math.max(firstLinePeople.length,1);
+    const minGapTarget=4;
+    const gapQualifiedPairs=availablePairs.filter(p=>{
+      const mainLast=pStats[p.main].last, subLast=pStats[p.secondary].last;
+      const mainGap=mainLast ? Math.floor((d-parseDate(mainLast))/86400000) : 99;
+      const subGap=subLast ? Math.floor((d-parseDate(subLast))/86400000) : 99;
+      return mainGap>=minGapTarget&&subGap>=minGapTarget;
+    });
+    const relaxedPairs=gapQualifiedPairs.length ? gapQualifiedPairs : availablePairs.filter(p=>{
+      const mainLast=pStats[p.main].last, subLast=pStats[p.secondary].last;
+      const mainGap=mainLast ? Math.floor((d-parseDate(mainLast))/86400000) : 99;
+      const subGap=subLast ? Math.floor((d-parseDate(subLast))/86400000) : 99;
+      return mainGap>=3&&subGap>=3;
+    });
+    const scoringPairs=relaxedPairs.length ? relaxedPairs : availablePairs;
+    const currentCounts=firstLinePeople.map(person=>pStats[person.name].count);
+    const minCount=Math.min(...currentCounts);
+    const fairCountPairs=scoringPairs.filter(p=>{
+      const maxPairCount=Math.max(pStats[p.main].count,pStats[p.secondary].count);
+      return maxPairCount<=minCount+2;
+    });
+    const weekendSensitivePairs=(q>=3||q===1)
+      ? (fairCountPairs.length ? fairCountPairs : scoringPairs).filter(p=>{
+          const maxPairQuality=Math.max(pStats[p.main].quality,pStats[p.secondary].quality);
+          const minQuality=Math.min(...firstLinePeople.map(person=>pStats[person.name].quality));
+          return maxPairQuality<=minQuality+4;
+        })
+      : [];
+    const finalPairs=(weekendSensitivePairs.length ? weekendSensitivePairs : (fairCountPairs.length ? fairCountPairs : scoringPairs));
+    const pairChoices=finalPairs.map(p=>{
       const mainStats=pStats[p.main], subStats=pStats[p.secondary];
       const mainGap=mainStats.last ? Math.floor((d-parseDate(mainStats.last))/86400000) : 99;
       const subGap=subStats.last ? Math.floor((d-parseDate(subStats.last))/86400000) : 99;
       const experienced=p.mainPerson.oldICU||p.subPerson.oldICU||data.continuity.oldICU.includes(p.main)||data.continuity.oldICU.includes(p.secondary);
-      let score=(mainStats.count+subStats.count)*100
-        +(mainGap<3?10000:0)+(subGap<3?10000:0)
-        +(mainStats.quality+subStats.quality)*5
-        +(p.preferred?-12:0)+Math.random()*8;
+      const mainOver=Math.max(0, mainStats.count-targetPerPerson);
+      const subOver=Math.max(0, subStats.count-targetPerPerson);
+      const mainRoleOver=Math.max(0, mainStats.count-mainTargetCount);
+      const pairMax=Math.max(mainStats.count, subStats.count);
+      const pairMin=Math.min(mainStats.count, subStats.count);
+      const pairKey=`${p.main}|${p.secondary}`;
+      const pairRepeat=pairUsage[pairKey] || 0;
+      let score=(mainStats.count+subStats.count)*240
+        +(mainGap<4?((4-mainGap)*2200):0)+(subGap<4?((4-subGap)*2200):0)
+        +(mainStats.quality+subStats.quality)*8
+        +(mainOver+subOver)*420
+        +mainRoleOver*520
+        +(pairMax-pairMin)*90
+        +pairRepeat*140
+        +(p.preferred?-80:0)
+        +(p.sameGroup&&!isSaturday?1600:(p.sameGroup?-120:0))
+        +Math.random()*2;
       if(index<2&&!experienced) score+=5000;
-      if(q===1) score-=(mainStats.count+subStats.count)*7;
-      if(q>=3) score-=(mainStats.count+subStats.count)*8;
+      if(q===1) score+=(mainStats.count+subStats.count)*60+(mainStats.bad+subStats.bad)*140+(mainOver+subOver)*260;
+      if(q>=3) score+=(mainStats.count+subStats.count)*44+(mainStats.quality+subStats.quality)*18+(mainOver+subOver)*260;
       return {p,score};
     }).sort((a,b)=>a.score-b.score);
     const chosen=pairChoices[0].p;
@@ -1127,8 +1740,10 @@ function generateSchedule() {
       const stats=pStats[name];
       stats.count++;stats.last=ds;stats.quality+=q;if(q===1)stats.bad++;
     });
+    const chosenPairKey=`${chosen.main}|${chosen.secondary}`;
+    pairUsage[chosenPairKey]=(pairUsage[chosenPairKey]||0)+1;
 
-    let backupName="", covered=coverageMap[ds]||"";
+    let backupName="", covered=coverageMap[ds]||"", extraSecondary="", extraSecondaryGroup="", extraSecondaryCovered=false;
     const fixedWorkers=backup.filter(person=>cycleWorksOn(person,d)&&!isUnavailable(person,d));
     if(fixedWorkers.length>1){
       toast(`${ds} 有多名固定周期二线同时值班，请调整周期`);
@@ -1138,12 +1753,27 @@ function generateSchedule() {
       backupName=fixedWorkers[0].name;
       covered="";
     }else if(!covered){
-      const choices=backup.filter(person=>person.mode!=="cycle"&&!isUnavailable(person,d)).map(person=>{
+      const backupTarget=((index+1)*1)/Math.max(backup.length,1);
+      const backupPool=backup.filter(person=>person.mode!=="cycle"&&!isUnavailable(person,d));
+      const gapQualifiedBackup=backupPool.filter(person=>{
+        const last=bStats[person.name].last;
+        const gap=last ? Math.floor((d-parseDate(last))/86400000) : 99;
+        return gap>=5;
+      });
+      const relaxedBackup=gapQualifiedBackup.length ? gapQualifiedBackup : backupPool.filter(person=>{
+        const last=bStats[person.name].last;
+        const gap=last ? Math.floor((d-parseDate(last))/86400000) : 99;
+        return gap>=4;
+      });
+      const scoringBackup=relaxedBackup.length ? relaxedBackup : backupPool;
+      const choices=scoringBackup.map(person=>{
         const name=person.name;
         const st=bStats[name], gap=st.last?Math.floor((d-parseDate(st.last))/86400000):99;
-        let score=st.count*100+(gap<3?10000:0)+st.quality*5+Math.random()*8;
-        if(q===1)score-=st.count*7;
-        if(q>=3)score-=st.count*8;
+        const over=Math.max(0, st.count-backupTarget);
+        let score=st.count*100+(gap<5?((5-gap)*5000):0)+st.quality*5+over*260+Math.random()*2;
+        if(st.count===0) score += (backupOrder.has(name) ? backupOrder.get(name) : 999) * 25;
+        if(q===1)score+=st.count*30+st.bad*90+over*180;
+        if(q>=3)score+=st.count*36+st.quality*16+over*220;
         return {name,score};
       }).sort((a,b)=>a.score-b.score);
       if(!choices.length){toast(`${ds} 没有可用二线人员`);return;}
@@ -1152,25 +1782,237 @@ function generateSchedule() {
     if(backupName){
       const bst=bStats[backupName]; bst.count++;bst.last=ds;bst.quality+=q;if(q===1)bst.bad++;
     }
-    result.push({date:ds,main:chosen.main,mainGroup:chosen.mainPerson.group,secondary:chosen.secondary,secondaryGroup:chosen.subPerson.group,backup:backupName,covered,quality:dutyQuality(d)});
+    if(covered&&backupName){
+      const extraPairPool=availablePairObjects({
+        allowSameGroup:isSaturday,
+        excludeNames:[chosen.main, chosen.secondary]
+      }).filter(p=>
+        !isUnavailable(p.mainPerson,d)&&
+        !isUnavailable(p.subPerson,d)
+      );
+      const extraChoices=extraPairPool
+        .filter(p=>p.secondary!==chosen.main&&p.secondary!==chosen.secondary)
+        .map(p=>{
+          const st=pStats[p.secondary] || {count:0,last:"",quality:0,bad:0};
+          const gap=st.last ? Math.floor((d-parseDate(st.last))/86400000) : 99;
+          const over=Math.max(0, st.count-targetPerPerson);
+          let score=st.count*260 + (gap<3?((3-gap)*1800):0) + st.quality*8 + over*500 + (p.sameGroup&&!isSaturday?1800:(p.sameGroup?-120:0)) + Math.random()*2;
+          return {p, score};
+        })
+        .sort((a,b)=>a.score-b.score);
+      if(extraChoices.length){
+        const extra=extraChoices[0].p;
+        extraSecondary=extra.secondary;
+        extraSecondaryGroup=extra.subPerson.group;
+        extraSecondaryCovered=true;
+        const st=pStats[extraSecondary];
+        if(st){ st.count++; st.last=ds; st.quality+=q; if(q===1)st.bad++; }
+      }
+    }
+    result.push({date:ds,main:chosen.main,mainGroup:chosen.mainPerson.group,secondary:chosen.secondary,secondaryGroup:chosen.subPerson.group,extraSecondary,extraSecondaryGroup,extraSecondaryCovered,backup:backupName,covered,quality:dutyQuality(d)});
   }
   data.schedule=result; save(); renderSchedule(); toast("排班已生成");
 }
+function generateResidentSchedule() {
+  const dates=getPeriod(), residents=[...data.resident];
+  if (!dates.length) { toast("请先设置排班周期"); return false; }
+  if (!residents.length) { toast("请先添加住院总人员"); return false; }
+  const coverageMap=Object.fromEntries((data.residentCoverage||[]).map(x=>[x.date,x.name]));
+  const recent=recentLastDates();
+  const rStats=Object.fromEntries(residents.map(r=>[r.name,{count:0,last:recent[r.name]||"",quality:0,bad:0}]));
+  const result=[];
+  for (let index=0; index<dates.length; index++) {
+    const d=dates[index], ds=iso(d), q=qualityScore(d);
+    if (coverageMap[ds]) { result.push({date:ds,name:coverageMap[ds],manual:true}); continue; }
+    const fixedWorkers=residents.filter(person=>cycleWorksOn(person,d)&&!isUnavailable(person,d));
+    if (fixedWorkers.length>1) { toast(`${ds} 有多名固定周期住院总同时值班，请调整周期`); return false; }
+    let chosenName="";
+    if (fixedWorkers.length===1) { chosenName=fixedWorkers[0].name; }
+    else {
+      const choices=residents
+        .filter(person=>person.mode!=="cycle"&&!isUnavailable(person,d))
+        .map(person=>{
+        const st=rStats[person.name], gap=st.last?Math.floor((d-parseDate(st.last))/86400000):99;
+        let score=st.count*100+(gap<3?10000:0)+st.quality*5+Math.random()*8;
+        if(q===1)score-=st.count*7; if(q>=3)score-=st.count*8;
+        return {name:person.name,score};
+      }).sort((a,b)=>a.score-b.score);
+      if(!choices.length){toast(`${ds} 没有可用住院总人员`);return false;}
+      chosenName=choices[0].name;
+    }
+    if(chosenName){
+      const st=rStats[chosenName]; st.count++;st.last=ds;st.quality+=q;if(q===1)st.bad++;
+    }
+    result.push({date:ds,name:chosenName});
+  }
+  data.residentSchedule=result; return true;
+}
+
+function generateAll() {
+  data.residentSchedule = data.residentSchedule || [];
+  generateSchedule();
+}
+
 
 function renderSchedule() {
-  const rows=data.schedule||[];
+  const dates=getPeriod(), rows=data.schedule||[];
+  // Render old daily-row table (secondary view)
   const body=document.getElementById("schedule-body");
-  if(!rows.length){body.innerHTML='<tr><td colspan="8" class="empty">配置完成后生成排班</td></tr>';renderValidation();return;}
-  body.innerHTML=rows.map(r=>{
-    const d=parseDate(r.date), cls=d.getDay()===4?"golden":(d.getDay()===0||d.getDay()===6?"weekend":"");
-    return `<tr class="${cls}">
-      <td>${r.date.slice(5).replace("-","/")}</td><td>周${weekday(d)}</td>
-      <td><b>${esc(r.main)}</b></td><td>${r.mainGroup}</td>
-      <td><b>${esc(r.secondary)}</b></td><td>${r.secondaryGroup}</td>
-      <td class="${r.covered?"covered":""}">${r.covered?`${esc(r.covered)}二值覆盖`:esc(r.backup)}</td>
-      <td>${r.quality}</td></tr>`;
-  }).join("");
+  if(!rows.length){body.innerHTML='<tr><td colspan="8" class="empty">配置完成后生成排班</td></tr>';}
+  else {
+    body.innerHTML=rows.map(r=>{
+      const d=parseDate(r.date), cls=d.getDay()===4?"golden":(d.getDay()===0||d.getDay()===6?"weekend":"");
+      return `<tr class="${cls}">
+        <td>${r.date.slice(5).replace("-","/")}</td><td>周${weekday(d)}</td>
+        <td><b>${esc(r.main)}</b></td><td>${r.mainGroup}</td>
+        <td><b>${esc(r.secondary)}</b></td><td>${r.secondaryGroup}</td>
+        <td class="${r.covered?"covered":""}">${r.covered?`${esc(r.covered)}二值覆盖`:esc(r.backup)}</td>
+        <td>${r.quality}</td></tr>`;
+    }).join("");
+  }
+  // Render matrix views
+  if(rows.length) { renderMatrixFirstEnhanced(dates,rows); renderMatrixBackup(dates,rows); renderMatrixFooter(); }
+  else { document.getElementById("matrix-first").innerHTML=""; document.getElementById("matrix-backup").innerHTML=""; document.getElementById("matrix-footer").innerHTML=""; }
+  document.getElementById("remarks-input").value=data.remarks||"";
   renderValidation(); renderStats();
+}
+
+function formatDutyName(person, role) {
+  if (!person) return "";
+  if (role==="first") return esc(person.name);
+  return person.employeeId ? `${esc(person.employeeId)}|${esc(person.name)}` : esc(person.name);
+}
+
+function buildMatrixHeader(dates, monthLabel) {
+  let h='<tr><td class="month-header" colspan="2">'+esc(monthLabel)+'</td>';
+  dates.forEach(d=>{
+    const weekendClass=(d.getDay()===0||d.getDay()===6)?' weekend-col':'';
+    h+='<td class="month-header'+weekendClass+'">'+d.getDate()+'</td>';
+  });
+  h+='</tr>';
+  return h;
+}
+
+function renderMatrixFirst(dates, rows) {
+  const mainPeople=data.people.filter(p=>p.active&&p.role==="主班类型");
+  const secondaryPeople=data.people.filter(p=>p.active&&p.role!=="主班类型");
+  const firstLinePeople=[...mainPeople,...secondaryPeople];
+  const dutyMap={}; firstLinePeople.forEach(p=>dutyMap[p.name]=new Set());
+  rows.forEach((r,dayIdx)=>{ if(dutyMap[r.main])dutyMap[r.main].add(dayIdx); if(dutyMap[r.secondary])dutyMap[r.secondary].add(dayIdx); });
+  const monthLabel=(data.cycle.month.split("-")[1]||"").replace(/^0/,"")+"月";
+  let h='<div class="matrix-wrap"><table class="matrix-table">';
+  h+='<tr><td class="block-title" colspan="'+(dates.length+2)+'">||一值</td></tr>';
+  h+=buildMatrixHeader(dates, monthLabel);
+  h+='<tr><td class="block-title" colspan="'+(dates.length+2)+'">主班</td></tr>';
+  mainPeople.forEach(p=>{
+    h+='<tr><td>'+esc(p.name)+'</td><td>'+esc(p.phone||'')+'</td>';
+    for(let i=0;i<dates.length;i++){
+      const onDuty=dutyMap[p.name]&&dutyMap[p.name].has(i);
+      h+='<td class="'+(onDuty?'has-duty':'')+'">'+(onDuty?'值':'')+'</td>';
+    }
+    h+='</tr>';
+  });
+  h+='</table></div>';
+  document.getElementById("matrix-first").innerHTML=h;
+}
+
+function renderMatrixFirstEnhanced(dates, rows) {
+  const mainPeople = data.people.filter(p => p.active && p.role === "主班类型");
+  const secondaryPeople = data.people.filter(p => p.active && p.role !== "主班类型");
+  const firstLinePeople = [...mainPeople, ...secondaryPeople];
+  const dutyMap = {};
+  firstLinePeople.forEach(p => dutyMap[p.name] = new Set());
+  rows.forEach((r, dayIdx) => {
+    if (dutyMap[r.main]) dutyMap[r.main].add(dayIdx);
+    if (dutyMap[r.secondary]) dutyMap[r.secondary].add(dayIdx);
+  });
+  const monthLabel = (data.cycle.month.split("-")[1] || "").replace(/^0/, "") + "月";
+  let h = '<div class="matrix-wrap"><table class="matrix-table">';
+  h += '<tr><td class="block-title" colspan="' + (dates.length + 2) + '">||一值</td></tr>';
+  h += buildMatrixHeader(dates, monthLabel);
+  const renderRoleRows = (title, people) => {
+    h += '<tr><td class="block-title" colspan="' + (dates.length + 2) + '">' + title + '</td></tr>';
+    people.forEach(p => {
+      h += '<tr><td>' + esc(p.name) + '</td><td>' + esc(p.phone || '') + '</td>';
+      for (let i = 0; i < dates.length; i++) {
+        const onDuty = dutyMap[p.name] && dutyMap[p.name].has(i);
+        const weekendClass = (dates[i].getDay() === 0 || dates[i].getDay() === 6) ? ' weekend-col' : '';
+        h += '<td class="' + (onDuty ? 'has-duty' : '') + weekendClass + '">' + (onDuty ? '值' : '') + '</td>';
+      }
+      h += '</tr>';
+    });
+  };
+  renderRoleRows("主班", mainPeople);
+  renderRoleRows("副班", secondaryPeople);
+  h += '</table></div>';
+  document.getElementById("matrix-first").innerHTML = h;
+}
+
+function renderMatrixResident(dates) {
+  const residents=data.resident;
+  const dutyMap={}; residents.forEach(r=>dutyMap[r.name]=new Set());
+  (data.residentSchedule||[]).forEach((s,dayIdx)=>{ if(dutyMap[s.name])dutyMap[s.name].add(dayIdx); });
+  const monthLabel=(data.cycle.month.split("-")[1]||"").replace(/^0/,"")+"月";
+  let h='<div class="matrix-wrap"><table class="matrix-table">';
+  h+='<tr><td class="block-title" colspan="'+(dates.length+2)+'">||住院总</td></tr>';
+  h+=buildMatrixHeader(dates, monthLabel);
+  residents.forEach(r=>{
+    h+='<tr><td>'+formatDutyName(r,"resident")+'</td><td>'+esc(r.phone||'')+'</td>';
+    for(let i=0;i<dates.length;i++){
+      const onDuty=dutyMap[r.name]&&dutyMap[r.name].has(i);
+      h+='<td class="'+(onDuty?'has-duty':'')+'">'+(onDuty?'值':'')+'</td>';
+    }
+    h+='</tr>';
+  });
+  h+='</table></div>';
+  document.getElementById("matrix-resident").innerHTML=h;
+}
+
+function renderMatrixBackup(dates, rows) {
+  const backupPeople=data.backup;
+  const dutyMap={}; backupPeople.forEach(b=>dutyMap[b.name]=new Set());
+  rows.forEach((r,dayIdx)=>{ if(r.backup&&dutyMap[r.backup])dutyMap[r.backup].add(dayIdx); if(r.covered&&dutyMap[r.covered])dutyMap[r.covered].add(dayIdx); });
+  const monthLabel=(data.cycle.month.split("-")[1]||"").replace(/^0/,"")+"月";
+  let h='<div class="matrix-wrap"><table class="matrix-table">';
+  h+='<tr><td class="block-title" colspan="'+(dates.length+2)+'">||二值</td></tr>';
+  h+=buildMatrixHeader(dates, monthLabel);
+  backupPeople.forEach(b=>{
+    h+='<tr><td>'+formatDutyName(b,"backup")+'</td><td>'+esc(b.phone||'')+'</td>';
+    for(let i=0;i<dates.length;i++){
+      const onDuty=dutyMap[b.name]&&dutyMap[b.name].has(i);
+      h+='<td class="'+(onDuty?'has-duty':'')+'">'+(onDuty?'值':'')+'</td>';
+    }
+    h+='</tr>';
+  });
+  h+='</table></div>';
+  document.getElementById("matrix-backup").innerHTML=h;
+}
+
+function renderMatrixFooter() {
+  const groups=["A组","B组","C组"];
+  const summaries=groups.map(g=>{
+    const people=data.people.filter(p=>p.group===g);
+    const mainCount=people.filter(p=>p.role==="主班类型").length;
+    const subCount=people.filter(p=>p.role==="副班类型").length;
+    const traineeCount=people.filter(p=>p.type==="进修").length;
+    return g+": "+people.length+"人 (主班"+mainCount+",副班"+subCount+",进修"+traineeCount+")";
+  }).join("；");
+  const residentSummary=data.resident.map(r=>r.name).join("、")||"无";
+  const backupSummary=data.backup.map(b=>b.name).join("、")||"无";
+  const holidayDays=data.cycle.holidays.length;
+  let footer='<div class="matrix-footer">';
+  footer+='<strong>分组构成：</strong>'+esc(summaries)+'<br>';
+  footer+='<strong>住院总：</strong>'+esc(residentSummary)+'<br>';
+  footer+='<strong>二值人员：</strong>'+esc(backupSummary)+'<br>';
+  footer+='<strong>本月假期：</strong>'+holidayDays+'天';
+  if(data.remarks) footer+='<br><strong>补充说明：</strong>'+esc(data.remarks);
+  footer+='</div>';
+  document.getElementById("matrix-footer").innerHTML=footer;
+}
+
+function saveRemarks() {
+  data.remarks=document.getElementById("remarks-input").value.trim();
+  save();
 }
 function renderValidation() {
   const rows=data.schedule||[], pills=[];
@@ -1191,25 +2033,39 @@ function renderValidation() {
   }).length;
   pills.push(`<span class="status-pill ${unavailableViolations?"bad":""}">${unavailableViolations?`${unavailableViolations}天违反禁排`:"不可排日期全部满足"}</span>`);
   pills.push(`<span class="status-pill">${data.coverage.length}天二值覆盖</span>`);
+  // Resident check
+  const resSch=data.residentSchedule||[];
+  if(resSch.length) pills.push(`<span class="status-pill">住院总${resSch.length}天完整</span>`);
+  // Cross-role conflict check
+  const residentOnDate=Object.fromEntries(resSch.map(r=>[r.date,r.name]));
+  const conflicts=rows.filter(r=>residentOnDate[r.date]&&(r.main===residentOnDate[r.date]||r.secondary===residentOnDate[r.date]||r.backup===residentOnDate[r.date])).length;
+  if(resSch.length) pills.push(`<span class="status-pill ${conflicts?"bad":""}">${conflicts?`${conflicts}天角色冲突`:"无角色冲突"}</span>`);
   document.getElementById("validation").innerHTML=pills.join("");
 }
 function renderStats() {
-  const first={}, second={};
-  document.getElementById("first-stats-head").innerHTML="<tr><th>人员</th><th>总次数</th><th>主班次数</th><th>搭档位次数</th><th>周四</th><th>周日</th><th>五/六</th></tr>";
-  data.people.filter(p=>p.active).forEach(p=>first[p.name]={count:0,main:0,secondary:0,thu:0,sun:0,bad:0});
+  const first={}, second={}, resident={};
+  data.resident.forEach(r=>resident[r.name]={count:0,thu:0,fri:0,sat:0,sun:0});
+  (data.residentSchedule||[]).forEach(s=>{
+    const d=parseDate(s.date);
+    if(!resident[s.name])resident[s.name]={count:0,thu:0,fri:0,sat:0,sun:0};
+    const x=resident[s.name];x.count++;
+    if(d.getDay()===4)x.thu++;if(d.getDay()===0)x.sun++;if(d.getDay()===5)x.fri++;if(d.getDay()===6)x.sat++;
+  });
+  document.getElementById("first-stats-head").innerHTML="<tr><th>人员</th><th>总次数</th><th>主班次数</th><th>搭档位次数</th><th>周四</th><th>周五</th><th>周六</th><th>周日</th></tr>";
+  data.people.filter(p=>p.active).forEach(p=>first[p.name]={count:0,main:0,secondary:0,thu:0,fri:0,sat:0,sun:0});
   data.schedule.forEach(r=>{
     const d=parseDate(r.date);
     [[r.main,"main"],[r.secondary,"secondary"]].forEach(([name,position])=>{
-      if(!first[name])first[name]={count:0,main:0,secondary:0,thu:0,sun:0,bad:0};
+      if(!first[name])first[name]={count:0,main:0,secondary:0,thu:0,fri:0,sat:0,sun:0};
       const x=first[name];x.count++;x[position]++;
-      if(d.getDay()===4)x.thu++;if(d.getDay()===0)x.sun++;if([5,6].includes(d.getDay()))x.bad++;
+      if(d.getDay()===4)x.thu++;if(d.getDay()===0)x.sun++;if(d.getDay()===5)x.fri++;if(d.getDay()===6)x.sat++;
     });
-    if(r.backup){if(!second[r.backup])second[r.backup]={count:0,thu:0,sun:0,bad:0};const x=second[r.backup];x.count++;if(d.getDay()===4)x.thu++;if(d.getDay()===0)x.sun++;if([5,6].includes(d.getDay()))x.bad++;}
+    if(r.backup){if(!second[r.backup])second[r.backup]={count:0,thu:0,fri:0,sat:0,sun:0};const x=second[r.backup];x.count++;if(d.getDay()===4)x.thu++;if(d.getDay()===0)x.sun++;if(d.getDay()===5)x.fri++;if(d.getDay()===6)x.sat++;}
   });
   document.getElementById("first-stats").innerHTML=Object.entries(first)
     .sort((a,b)=>b[1].count-a[1].count||a[0].localeCompare(b[0],"zh-CN"))
-    .map(([k,x])=>`<tr><td>${esc(k)}</td><td>${x.count}</td><td>${x.main}</td><td>${x.secondary}</td><td>${x.thu}</td><td>${x.sun}</td><td>${x.bad}</td></tr>`).join("");
-  document.getElementById("backup-stats").innerHTML=Object.entries(second).map(([k,x])=>`<tr><td>${esc(k)}</td><td>${x.count}</td><td>${x.thu}</td><td>${x.sun}</td><td>${x.bad}</td></tr>`).join("");
+    .map(([k,x])=>`<tr><td>${esc(k)}</td><td>${x.count}</td><td>${x.main}</td><td>${x.secondary}</td><td>${x.thu}</td><td>${x.fri}</td><td>${x.sat}</td><td>${x.sun}</td></tr>`).join("");
+  document.getElementById("backup-stats").innerHTML=Object.entries(second).map(([k,x])=>`<tr><td>${esc(k)}</td><td>${x.count}</td><td>${x.thu}</td><td>${x.fri}</td><td>${x.sat}</td><td>${x.sun}</td></tr>`).join("");
 }
 
 function renderMetrics() {
@@ -1231,9 +2087,64 @@ function importProject(event) {
 }
 function exportExcel() {
   if(!data.schedule.length)return toast("请先生成排班");
-  const rows=data.schedule.map(r=>`<tr><td>${r.date}</td><td>${r.main}</td><td>${r.mainGroup}</td><td>${r.secondary}</td><td>${r.secondaryGroup}</td><td>${r.covered?r.covered+"二值覆盖":r.backup}</td><td>${r.quality}</td></tr>`).join("");
-  const html=`<html><head><meta charset="UTF-8"></head><body><table border="1"><tr><th>日期</th><th>主班</th><th>组别</th><th>副班</th><th>组别</th><th>二线</th><th>班次提示</th></tr>${rows}</table></body></html>`;
-  download("\ufeff"+html,`排班_${data.cycle.month}.xls`,"application/vnd.ms-excel");
+  const dates=getPeriod();
+  if(typeof XLSX==="undefined")return toast("Excel组件未加载，请联网刷新页面后重试");
+  const wsData=[];
+  const monthLabel=(data.cycle.month.split("-")[1]||"").replace(/^0/,"")+"月";
+
+  // Build first-line duty map
+  const flPeople=data.people.filter(p=>p.active);
+  const flMap={}; flPeople.forEach(p=>flMap[p.name]=new Set());
+  data.schedule.forEach((r,i)=>{ if(flMap[r.main])flMap[r.main].add(i); if(flMap[r.secondary])flMap[r.secondary].add(i); });
+
+  // Build backup duty map
+  const exportBackupPeople = [
+    ...data.backup,
+    ...Object.keys(Object.fromEntries((data.schedule||[]).filter(r=>r.covered && !data.backup.some(b=>b.name===r.covered)).map(r=>[r.covered,{name:r.covered,employeeId:"",phone:""}])))
+      .map(name => ({name,employeeId:"",phone:""}))
+  ];
+  const bMap={}; exportBackupPeople.forEach(b=>bMap[b.name]=new Set());
+  data.schedule.forEach((r,i)=>{ if(r.backup&&bMap[r.backup])bMap[r.backup].add(i); if(r.covered&&bMap[r.covered])bMap[r.covered].add(i); });
+
+  // -- Section 1: 一值 --
+  wsData.push(["||一值"]);
+  const h1=["",""]; dates.forEach(d=>h1.push(d.getDate().toString())); wsData.push(h1);
+  flPeople.forEach(p=>{
+    const row=[p.name,p.phone||""]; dates.forEach((d,i)=>{ row.push(flMap[p.name]&&flMap[p.name].has(i)?"值":""); });
+    wsData.push(row);
+  });
+
+  // -- Section 2: 住院总 --
+  wsData.push([]); wsData.push(["||住院总"]);
+  const h2=["",""]; dates.forEach(d=>h2.push(d.getDate().toString())); wsData.push(h2);
+  data.resident.forEach(r=>{
+    const display=r.employeeId?r.employeeId+"|"+r.name:r.name;
+    const row=[display,r.phone||""]; dates.forEach((d,i)=>{ row.push(rMap[r.name]&&rMap[r.name].has(i)?"值":""); });
+    wsData.push(row);
+  });
+
+  // -- Section 3: 二值 --
+  wsData.push([]); wsData.push(["||二值"]);
+  const h3=["",""]; dates.forEach(d=>h3.push(d.getDate().toString())); wsData.push(h3);
+  exportBackupPeople.forEach(b=>{
+    const display=b.employeeId?b.employeeId+"|"+b.name:b.name;
+    const row=[display,b.phone||""]; dates.forEach((d,i)=>{ row.push(bMap[b.name]&&bMap[b.name].has(i)?"值":""); });
+    wsData.push(row);
+  });
+
+  // -- Footer --
+  wsData.push([]);
+  const groups=["A组","B组","C组"];
+  wsData.push(["分组："+groups.map(g=>{const p=data.people.filter(x=>x.group===g);return g+p.length+"人";}).join("，")]);
+  wsData.push(["住院总："+data.resident.map(r=>r.name).join("、")]);
+  wsData.push(["二值："+data.backup.map(b=>b.name).join("、")]);
+  wsData.push(["假期："+data.cycle.holidays.length+"天"]);
+  if(data.remarks) wsData.push(["备注："+data.remarks]);
+
+  const ws=XLSX.utils.aoa_to_sheet(wsData);
+  ws["!cols"]=[{wch:16},{wch:5}]; dates.forEach(()=>ws["!cols"].push({wch:4}));
+  const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,"排班表");
+  XLSX.writeFile(wb,`排班_${data.cycle.month}.xlsx`);
 }
 function download(content,name,type){const blob=new Blob([content],{type});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),500);}
 function resetApp(){if(!confirm("确定清空当前项目吗？"))return;data=blankData();save();init();toast("已清空");}
@@ -1249,11 +2160,16 @@ function loadNovemberSample(){
     ["成员M","主班类型","专业岗","C组","",3,0,1],["成员N","主班类型","进修","C组","",3,1,1],["成员O","主班类型","其他","C组","C组",2,1,0],
     ["成员P","副班类型","支撑岗位","C组","",2,1,1],["成员Q","副班类型","其他","C组","",2,0,1],["成员R","副班类型","其他","C组","C组",2,1,1]
   ];
-  data.people=rows.map(r=>({name:r[0],role:r[1],type:r[2],group:r[3],oldGroup:r[4],level:r[5],oldICU:!!r[6],active:!!r[7],unavailableDates:[],note:""}));
-  data.pairs=[];save();renderAll();autoPair();
+  data.people=rows.map(r=>({name:r[0],employeeId:"",phone:"",role:r[1],type:r[2],group:r[3],oldGroup:r[4],level:r[5],oldICU:!!r[6],active:!!r[7],unavailableDates:[],note:"",groupLocked:false}));
+  data.pairs=[]; data.resident=[{name:"住院总A",employeeId:"R001",phone:"",mode:"normal",cycle:"",cycleStart:"",unavailableDates:[],note:""},{name:"住院总B",employeeId:"",phone:"",mode:"normal",cycle:"",cycleStart:"",unavailableDates:[],note:""}]; data.residentSchedule=[]; data.residentCoverage=[]; data.remarks="示例备注：负责人张老师 138xxxx"; save();renderAll();autoPair();
 }
 
 init();
+
+// Bind file input handlers via addEventListener (more reliable than inline onchange)
+document.getElementById('file-prev-schedule').addEventListener('change', importPrevSchedule);
+document.getElementById('file-second-duty').addEventListener('change', importSecondDutyFile);
+document.getElementById('file-roster').addEventListener('change', importRosterFile);
 </script>
 </body>
 </html>
