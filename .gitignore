@@ -1,0 +1,81 @@
+__pycache__/
+*.py[cod]
+
+# Local environment
+.env
+.venv/
+venv/
+node_modules/
+.codex-*/
+outputs/
+%SystemDrive%/
+
+# OS/editor files
+.DS_Store
+Thumbs.db
+
+# Generated scheduling data and spreadsheets
+*.xlsx
+*.xls
+*.png
+icu_first_line_schedule.csv
+
+# Generated exports / local project snapshots
+*.log
+*.bak
+*.zip
+*_旧副本备份_*.html
+*_updated.html
+schedule_final_v2.json
+schedule_plan_*.json
+monthly_schedule_input_template.json
+
+# Internal reports and requirement notes
+ADJUSTMENT_REPORT.md
+COMPLETION_REPORT.md
+DELIVERY_CHECKLIST.md
+DELIVERY_SUMMARY_V2.md
+development_report.md
+FILE_LIST.md
+FINAL_SUMMARY.md
+ISSUES_AND_IMPROVEMENTS.md
+QUICK_START_V2.md
+README_V2.md
+REDESIGN_REPORT_V2.md
+排班APP规则说明.md
+排班需求文档.md
+排班需求工具.html
+INDEX_V2.html
+project_index.html
+scheduler_v2.html
+scheduler.html
+generate_balanced_schedule.py
+generate_november_first_duty.py
+generate_schedule_v2.py
+quick_start.py
+run_schedule_generation.py
+schedule_export.py
+schedule_new_plan.py
+format_november_like_source.py
+generate_backup_november_2025.py
+generate_backup_trial.py
+merge_november_schedules.py
+scheduling_rules.json
+test_python.py
+
+# Generated schedule data (contains real staff info)
+embedded_schedule_data.json
+ICU排班助手_含排班数据.html
+ICU一值班表_*.md
+ICU一值班表_*.csv
+ICU一值班表_*.html
+ICU排班表_*.csv
+icu_first_line_schedule.csv
+
+# Local source material and scratch projects (may contain real staff data)
+8月排班资料/
+630修改/
+shift-planner-app-main/
+apply_edits.js
+scripts/build_schedule.mjs
+排班讨论总结_*.md
